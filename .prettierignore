@@ -1,0 +1,16 @@
+# 忽略node_modules目录
+node_modules
+
+# 忽略build目录
+build
+
+# 忽略所有min.js文件
+*.min.js
+
+# 忽略特定文件
+*.yaml
+
+# 忽略所有logs目录中的文件
+logs/**
+
+.history
