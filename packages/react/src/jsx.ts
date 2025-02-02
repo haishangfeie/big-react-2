@@ -25,26 +25,27 @@ const ReactElement = (
 };
 
 export const jsx = (type: ElementType, config: any, ...maybeChildren: any) => {
-  let key = null;
-  const props: any = {};
-  let ref = null;
+  let key: Key = null;
+  const props: Props = {};
+  let ref: Ref = null;
 
   for (const prop in config || {}) {
+    const val = config[prop];
     if (prop === 'key') {
-      if (config[prop] !== void 0) {
-        key = config[prop] + '';
+      if (val !== void 0) {
+        key = val + '';
       }
       continue;
     }
     if (prop === 'ref') {
-      if (config[prop] !== void 0) {
-        ref = config[prop] + '';
+      if (val !== void 0) {
+        ref = val + '';
       }
       continue;
     }
 
     if ({}.hasOwnProperty.call(config, prop)) {
-      props[prop] = config[prop];
+      props[prop] = val;
     }
   }
   const maybeChildrenLen = maybeChildren.length;
