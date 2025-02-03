@@ -14,11 +14,6 @@ export const resolvePkgPath = (pkgName, isDist = false) => {
 
 // 这里是读取packages里的模块对应的package.json文件
 export const getPkgJson = (pkgName) => {
-  console.log(
-    `resolvePath(resolvePkgPath(pkgName), 'package.json')`,
-    resolvePath(resolvePkgPath(pkgName), 'package.json'),
-    pkgName
-  );
   const text = readFileSync(
     resolvePath(resolvePkgPath(pkgName), 'package.json'),
     'utf-8'
