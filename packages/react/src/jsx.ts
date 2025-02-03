@@ -1,6 +1,6 @@
 import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
 import type {
-  ReactElement,
+  ReactElementType,
   Type,
   Key,
   Ref,
@@ -13,7 +13,7 @@ const ReactElement = (
   key: Key,
   ref: Ref,
   props: Props
-): ReactElement => {
+): ReactElementType => {
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type,
