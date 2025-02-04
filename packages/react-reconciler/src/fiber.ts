@@ -1,4 +1,4 @@
-import { Props, Key } from 'shared/ReactTypes';
+import { Props, Key, Ref } from 'shared/ReactTypes';
 import { WorkType } from './workTags';
 import { NoFlags, Flags } from './fiberFlags';
 
@@ -13,7 +13,7 @@ export class FiberNode {
   child: FiberNode | null;
   index: number;
 
-  ref: any;
+  ref: Ref;
 
   pendingProps: Props;
   memoizedProps: Props;
