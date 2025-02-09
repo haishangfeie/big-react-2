@@ -4,17 +4,17 @@ import { processUpdateQueue, UpdateQueue } from './updateQueue';
 import { HostComponent, HostRoot, HostText } from './workTags';
 import { reconcileChildFibers, mountChildFibers } from './childFiber';
 
-export function beginWork(fiber: FiberNode): FiberNode | null {
-  switch (fiber.tag) {
+export function beginWork(wip: FiberNode): FiberNode | null {
+  switch (wip.tag) {
     case HostRoot:
-      return updateHootRoot(fiber);
+      return updateHootRoot(wip);
     case HostComponent:
-      return updateHostComponent(fiber);
+      return updateHostComponent(wip);
     case HostText:
       return null;
     default: {
       if (__DEV__) {
-        console.warn('beginWork未实现的类型');
+        console.warn('beginWork未实现的类型', wip);
       }
     }
   }
@@ -44,8 +44,8 @@ function updateHostComponent(wip: FiberNode) {
 function reconcileChildren(wip: FiberNode, newChild: ReactElementType | null) {
   const current = wip.alternate;
   if (current === null) {
-    mountChildFibers(wip, null, newChild);
+    wip.child = mountChildFibers(wip, null, newChild);
   } else {
-    reconcileChildFibers(wip, current, newChild);
+    wip.child = reconcileChildFibers(wip, current, newChild);
   }
 }

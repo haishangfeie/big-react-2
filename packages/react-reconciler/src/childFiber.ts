@@ -6,7 +6,7 @@ import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
 
 function ChildReconciler(shouldTrackEffects: boolean) {
   const placeSingleChild = (fiber: FiberNode) => {
-    if (shouldTrackEffects && fiber.alternate !== null) {
+    if (shouldTrackEffects && fiber.alternate === null) {
       fiber.flags |= Placement;
     }
     return fiber;
@@ -19,7 +19,6 @@ function ChildReconciler(shouldTrackEffects: boolean) {
   ) => {
     const fiber = createFiberFromElement(newChild);
     fiber.return = returnFiber;
-    returnFiber.child = fiber;
     return fiber;
   };
   const reconcileSingleTextNode = (
@@ -30,7 +29,6 @@ function ChildReconciler(shouldTrackEffects: boolean) {
   ) => {
     const fiber = new FiberNode(HostText, { content }, null);
     fiber.return = returnFiber;
-    returnFiber.child = fiber;
     return fiber;
   };
 
