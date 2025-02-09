@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
+import replace from '@rollup/plugin-replace';
 
 // 解析包路径，这里的包指的分别是packages文件夹下的模块的路径和构建输出包路径
 export const resolvePkgPath = (pkgName, isDist = false) => {
@@ -25,6 +26,11 @@ export const resolvePath = (...paths) => {
   return path.resolve(...paths);
 };
 
-export const getBaseRollupPlugins = ({ typescriptOpt = {} } = {}) => {
-  return [typescript(typescriptOpt), commonjs()];
+export const getBaseRollupPlugins = ({
+  typescriptOpt = {},
+  replaceOpt = {
+    __DEV__: true
+  }
+} = {}) => {
+  return [replace(replaceOpt), typescript(typescriptOpt), commonjs()];
 };

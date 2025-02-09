@@ -1,5 +1,5 @@
-import { Props, Key, Ref } from 'shared/ReactTypes';
-import { WorkType } from './workTags';
+import { Props, Key, Ref, ReactElementType } from 'shared/ReactTypes';
+import { FunctionComponent, HostRoot, WorkType } from './workTags';
 import { NoFlags, Flags } from './fiberFlags';
 import { Container } from 'hostConfig';
 export class FiberNode {
@@ -83,3 +83,16 @@ export const createWorkInProgress = (
   wip.memoizedProps = current.memoizedProps;
   return wip;
 };
+
+export function createFiberFromElement(element: ReactElementType) {
+  let tag: WorkType = FunctionComponent;
+  const { type, props, key } = element;
+  if (typeof type === 'string') {
+    tag = HostRoot;
+  } else if (typeof type !== 'function' && __DEV__) {
+    console.warn(`createFiberFromElement未处理类型`, element);
+  }
+  const fiber = new FiberNode(tag, props, key);
+  fiber.type = element.type;
+  return fiber;
+}
