@@ -14,21 +14,23 @@ function ChildReconciler(shouldTrackEffects: boolean) {
   const reconcileSingleElement = (
     returnFiber: FiberNode,
     // eslint-disable-next-line
-    currentFiber: FiberNode|null,
+    currentFiber: FiberNode | null,
     newChild: ReactElementType
   ) => {
     const fiber = createFiberFromElement(newChild);
     fiber.return = returnFiber;
+    returnFiber.child = fiber;
     return fiber;
   };
   const reconcileSingleTextNode = (
     returnFiber: FiberNode,
     // eslint-disable-next-line
-    currentFiber: FiberNode|null,
+    currentFiber: FiberNode | null,
     content: string | number
   ) => {
     const fiber = new FiberNode(HostText, { content }, null);
     fiber.return = returnFiber;
+    returnFiber.child = fiber;
     return fiber;
   };
 

@@ -1,5 +1,5 @@
 import { Props, Key, Ref, ReactElementType } from 'shared/ReactTypes';
-import { FunctionComponent, HostRoot, WorkType } from './workTags';
+import { FunctionComponent, HostComponent, WorkType } from './workTags';
 import { NoFlags, Flags } from './fiberFlags';
 import { Container } from 'hostConfig';
 export class FiberNode {
@@ -88,7 +88,7 @@ export function createFiberFromElement(element: ReactElementType) {
   let tag: WorkType = FunctionComponent;
   const { type, props, key } = element;
   if (typeof type === 'string') {
-    tag = HostRoot;
+    tag = HostComponent;
   } else if (typeof type !== 'function' && __DEV__) {
     console.warn(`createFiberFromElement未处理类型`, element);
   }

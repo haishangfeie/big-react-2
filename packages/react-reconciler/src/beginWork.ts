@@ -3,7 +3,7 @@ import { FiberNode } from './fiber';
 import { processUpdateQueue, UpdateQueue } from './updateQueue';
 import { HostComponent, HostRoot, HostText } from './workTags';
 import { reconcileChildFibers, mountChildFibers } from './childFiber';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 export function beginWork(fiber: FiberNode): FiberNode | null {
   switch (fiber.tag) {
     case HostRoot:
