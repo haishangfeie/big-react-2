@@ -2,13 +2,13 @@ import { Props, Key, Ref } from 'shared/ReactTypes';
 import { WorkType } from './workTags';
 import { NoFlags, Flags } from './fiberFlags';
 import { Container } from 'hostConfig';
-import { UpdateQueue } from './updateQueue';
 export class FiberNode {
   tag: WorkType;
   key: Key;
   stateNode: any;
   type: any;
 
+  // 构成树状结构
   return: FiberNode | null;
   sibling: FiberNode | null;
   child: FiberNode | null;
@@ -16,11 +16,12 @@ export class FiberNode {
 
   ref: Ref;
 
+  // 作为工作单元
   pendingProps: Props;
   memoizedProps: Props;
   memoizedState: any;
   alternate: FiberNode | null;
-  updateQueue: UpdateQueue<unknown> | null;
+  updateQueue: unknown;
   flags: Flags;
 
   constructor(tag: WorkType, pendingProps: Props, key: Key) {
@@ -37,12 +38,13 @@ export class FiberNode {
 
     this.ref = null;
 
-    // 作为数据单元
+    // 作为工作单元
     this.pendingProps = pendingProps;
     this.memoizedProps = null;
     this.memoizedState = null;
     this.alternate = null;
     this.updateQueue = null;
+    // 副作用
     this.flags = NoFlags;
   }
 }
