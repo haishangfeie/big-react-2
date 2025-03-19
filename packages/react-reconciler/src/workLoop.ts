@@ -56,6 +56,8 @@ function renderRoot(root: FiberRootNode) {
     }
     // eslint-disable-next-line no-constant-condition
   } while (true);
+
+  root.finishedWork = root.current.alternate;
 }
 
 function workLoop() {
@@ -64,14 +66,14 @@ function workLoop() {
   }
 }
 
-function performUnitOfWork(fiber: FiberNode) {
-  const next = beginWork(fiber);
-  fiber.memoizedProps = fiber.pendingProps;
+function performUnitOfWork(wip: FiberNode) {
+  const next = beginWork(wip);
+  wip.memoizedProps = wip.pendingProps;
 
   if (next !== null) {
     workInProgress = next;
   } else {
-    completeUnitOfWork(fiber);
+    completeUnitOfWork(wip);
   }
 }
 
