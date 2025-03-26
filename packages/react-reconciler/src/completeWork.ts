@@ -8,7 +8,6 @@ import { FiberNode } from './fiber';
 import { HostComponent, HostRoot, HostText } from './workTags';
 import { NoFlags } from './fiberFlags';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function completeWork(wip: FiberNode) {
   const current = wip.alternate;
   const pendingProps = wip.pendingProps;
@@ -56,29 +55,28 @@ export function completeWork(wip: FiberNode) {
   </div>
 */
 function appendAllChildren(parent: Container, wip: FiberNode) {
-  let child = wip.child;
-  if (child !== null) {
-    child.return = wip;
+  let node = wip.child;
+  if (node !== null) {
+    node.return = wip;
   }
 
-  while (child !== null) {
-    if (child.tag === HostComponent || child.tag === HostText) {
-      appendInitialChild(parent, child.stateNode);
-    } else if (child.child !== null) {
-      child.child.return = child;
-      child = child.child;
+  while (node !== null) {
+    if (node.tag === HostComponent || node.tag === HostText) {
+      appendInitialChild(parent, node.stateNode);
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
       continue;
     }
-    if (child === null) {
-      return;
-    }
-    while ((child as FiberNode).sibling === null) {
-      child = (child as FiberNode).return;
-      if (child === wip) {
+
+    while ((node as FiberNode).sibling === null) {
+      node = (node as FiberNode).return;
+      if (node === wip) {
         return;
       }
     }
-    child = (child as FiberNode).sibling;
+    ((node as FiberNode).sibling as FiberNode).return = node;
+    node = (node as FiberNode).sibling;
   }
 }
 
@@ -91,6 +89,7 @@ function bubbleProperties(wip: FiberNode) {
     subtreeFlags |= child.subtreeFlags;
     subtreeFlags |= child.flags;
 
+    child.return = wip;
     child = child.sibling;
   }
   wip.subtreeFlags = subtreeFlags;

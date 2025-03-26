@@ -47,6 +47,7 @@ export class FiberNode {
     this.updateQueue = null;
     // 副作用
     this.flags = NoFlags;
+    // 表示子树中包含的副作用
     this.subtreeFlags = NoFlags;
   }
 }

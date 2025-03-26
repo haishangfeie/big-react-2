@@ -58,6 +58,8 @@ function renderRoot(root: FiberRootNode) {
   } while (true);
 
   root.finishedWork = root.current.alternate;
+
+  // TODO: 执行具体的dom操作 commitRoot方法
 }
 
 function workLoop() {
