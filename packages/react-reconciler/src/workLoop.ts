@@ -112,18 +112,27 @@ function commitRoot(root: FiberRootNode) {
     return;
   }
 
-  console.warn('commitRoot开始执行', finishedWork);
+  if (__DEV__) {
+    console.warn('commit阶段开始', finishedWork);
+  }
 
   // 重置
   root.finishedWork = null;
 
   // 判断是否要执行3个子阶段
   // TODO: 当前仅判断mutation
-  const hasMutationEffect = (finishedWork.flags & MutationMask) !== NoFlags;
-  const hasMutationSubtreeEffect =
+  const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
+  const subtreeHasEffect =
     (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
 
-  if (hasMutationEffect || hasMutationSubtreeEffect) {
+  if (rootHasEffect || subtreeHasEffect) {
     // TODO
+    // mutation
+
+    // 在mutation结束，layout开始前切换fiber树
+    root.current = finishedWork;
+    // layout
+  } else {
+    root.current = finishedWork;
   }
 }
