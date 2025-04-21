@@ -14,3 +14,8 @@ export const appendInitialChild = (...args: any[]) => {
 export const createTextInstance = (...args: any[]) => {
   return {} as any;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const appendChildToContainer = (...args: any[]) => {
+  return {} as any;
+};
