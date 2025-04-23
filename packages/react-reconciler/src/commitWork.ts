@@ -1,12 +1,7 @@
 import { appendChildToContainer, Container } from 'hostConfig';
-import { FiberNode } from './fiber';
+import { FiberNode, FiberRootNode } from './fiber';
 import { MutationMask, NoFlags, Placement } from './fiberFlags';
-import {
-  FunctionComponent,
-  HostComponent,
-  HostRoot,
-  HostText
-} from './workTags';
+import { HostComponent, HostRoot, HostText } from './workTags';
 
 let nextEffect: FiberNode | null = null;
 export const commitMutationEffects = (finishedWork: FiberNode) => {
@@ -17,17 +12,19 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
   nextEffect = finishedWork;
 
   while (nextEffect !== null) {
+    const child: FiberNode | null = nextEffect.child;
     if (
       (nextEffect.subtreeFlags & MutationMask) !== NoFlags &&
-      nextEffect.child
+      child !== null
     ) {
-      nextEffect = nextEffect.child;
+      nextEffect = child;
       continue;
     }
     commitMutationEffectsOnFiber(nextEffect);
     while (nextEffect !== null) {
-      if (nextEffect.sibling) {
-        nextEffect = nextEffect.sibling;
+      const sibling: FiberNode | null = nextEffect.sibling;
+      if (sibling) {
+        nextEffect = sibling;
         break;
       } else {
         nextEffect = nextEffect.return;
@@ -46,46 +43,51 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
 
 const commitPlacement = (finishedWork: FiberNode) => {
   /* 1. 找到有parent container，2. 找到当前fiber对应的 dom 3. 将dom挂到parent上 */
+  if (__DEV__) {
+    console.warn('执行Placement操作', finishedWork);
+  }
   const parent = getHostParent(finishedWork);
   appendPlacementNodeIntoContainer(finishedWork, parent);
 };
 
 const getHostParent = (fiber: FiberNode) => {
-  let node: FiberNode | null = fiber;
+  let node: FiberNode | null = fiber.return;
   while (node !== null) {
-    if (node.tag === HostComponent || node.tag === HostText) {
+    if (node.tag === HostComponent) {
       return node.stateNode;
+    }
+    if (node.tag === HostRoot) {
+      return (node.stateNode as FiberRootNode).container;
     }
     node = node.return;
   }
-  console.warn('getHostParent获取parent失败');
+  if (__DEV__) {
+    console.warn('getHostParent获取parent失败');
+  }
   return null;
 };
 
+/**
+ * 这个方法的作用就是获取到fiber对应的dom，将dom插入到父节点上
+ * @param finishedWork
+ * @param hostParent
+ * @returns
+ */
 const appendPlacementNodeIntoContainer = (
   finishedWork: FiberNode,
-  parent: Container
+  hostParent: Container
 ) => {
-  let node: FiberNode | null = finishedWork;
+  if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
+    return appendChildToContainer(finishedWork.stateNode, hostParent);
+  }
+  let node = finishedWork.child;
   while (node !== null) {
-    if (node.tag === HostComponent || node.tag === HostText) {
-      appendChildToContainer(parent, node.stateNode);
-    } else if (node.tag === FunctionComponent || node.tag === HostRoot) {
-      if (node.child) {
-        node = node.child;
-        continue;
-      }
-    }
-    while (node !== null) {
-      if (node.sibling) {
-        node = node.sibling;
-        break;
-      } else {
-        node = node.return;
-        if (node === finishedWork) {
-          return;
-        }
-      }
+    appendPlacementNodeIntoContainer(node, hostParent);
+    const sibling = node.sibling;
+    if (sibling) {
+      node = sibling;
+    } else {
+      break;
     }
   }
 };
