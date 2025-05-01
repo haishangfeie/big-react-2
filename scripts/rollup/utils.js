@@ -29,7 +29,8 @@ export const resolvePath = (...paths) => {
 export const getBaseRollupPlugins = ({
   typescriptOpt = {},
   replaceOpt = {
-    __DEV__: true
+    __DEV__: true,
+    preventAssignment: true
   }
 } = {}) => {
   return [replace(replaceOpt), typescript(typescriptOpt), commonjs()];

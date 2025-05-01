@@ -78,7 +78,7 @@ const appendPlacementNodeIntoContainer = (
   hostParent: Container
 ) => {
   if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
-    return appendChildToContainer(finishedWork.stateNode, hostParent);
+    return appendChildToContainer(hostParent, finishedWork.stateNode);
   }
   let node = finishedWork.child;
   while (node !== null) {

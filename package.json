@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky",
     "lint": "eslint --fix --quiet",
-    "build:dev": "rimraf dist && rollup --config scripts/rollup/react.config.js"
+    "build:dev": "rimraf dist && rollup --config scripts/rollup/dev.config.js"
   },
   "keywords": [],
   "author": "",

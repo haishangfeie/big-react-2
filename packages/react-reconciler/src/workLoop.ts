@@ -32,7 +32,6 @@ function prepareFreshStack(root: FiberRootNode) {
   workInProgress = createWorkInProgress(root.current, {});
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function renderRoot(root: FiberRootNode) {
   // 初始化
   prepareFreshStack(root);
