@@ -7,9 +7,9 @@ import {
 import generatePackageJson from 'rollup-plugin-generate-package-json';
 import alias from '@rollup/plugin-alias';
 
-const pkgPath = resolvePkgPath('react-dom');
 const pkg = getPkgJson('react-dom');
-const outputPath = resolvePkgPath('react-dom', true);
+const pkgPath = resolvePkgPath(pkg.name);
+const outputPath = resolvePkgPath(pkg.name, true);
 
 export default [
   {
@@ -55,7 +55,7 @@ export default [
       }),
       alias({
         entries: {
-          hostConfig: 'react-dom/src/hostConfig'
+          hostConfig: `${pkgPath}/src/hostConfig.ts`
         }
       })
     ]

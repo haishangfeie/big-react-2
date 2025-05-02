@@ -6,9 +6,9 @@ import {
 } from './utils.js';
 import generatePackageJson from 'rollup-plugin-generate-package-json';
 
-const pkgPath = resolvePkgPath('react');
 const pkg = getPkgJson('react');
-const outputPath = resolvePkgPath('react', true);
+const pkgPath = resolvePkgPath(pkg.name);
+const outputPath = resolvePkgPath(pkg.name, true);
 
 export default [
   {
