@@ -20,8 +20,9 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
       nextEffect = child;
       continue;
     }
-    commitMutationEffectsOnFiber(nextEffect);
+
     while (nextEffect !== null) {
+      commitMutationEffectsOnFiber(nextEffect);
       const sibling: FiberNode | null = nextEffect.sibling;
       if (sibling) {
         nextEffect = sibling;
@@ -47,7 +48,9 @@ const commitPlacement = (finishedWork: FiberNode) => {
     console.warn('执行Placement操作', finishedWork);
   }
   const parent = getHostParent(finishedWork);
-  appendPlacementNodeIntoContainer(finishedWork, parent);
+  if (parent) {
+    appendPlacementNodeIntoContainer(finishedWork, parent);
+  }
 };
 
 const getHostParent = (fiber: FiberNode) => {
