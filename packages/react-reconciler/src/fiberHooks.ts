@@ -4,7 +4,7 @@ import { FiberNode } from './fiber';
 export type Hook = {
   memoizedState: any;
   updateQueue: unknown;
-  next: Hook;
+  next: Hook | null;
 };
 
 const { currentDispatcher } = internals;

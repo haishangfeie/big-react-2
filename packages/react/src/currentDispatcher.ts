@@ -1,7 +1,7 @@
 import { Action } from 'shared/ReactTypes';
 
 export interface Dispatcher {
-  useState: <S>(initState: S | (() => S)) => [S, Dispatch<S>];
+  useState: <S>(initialState: S | (() => S)) => [S, Dispatch<S>];
 }
 
 export type Dispatch<S> = (action: Action<S>) => void;
@@ -11,13 +11,13 @@ const currentDispatcher: { current: Dispatcher | null } = {
 };
 
 export const resolveDispatcher = () => {
-  const current = currentDispatcher.current;
+  const dispatcher = currentDispatcher.current;
 
-  if (current === null) {
+  if (dispatcher === null) {
     throw new Error('hook只能在函数组件中使用');
   }
 
-  return current;
+  return dispatcher;
 };
 
 export default currentDispatcher;
