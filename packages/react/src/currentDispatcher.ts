@@ -1,22 +1,23 @@
 import { Action } from 'shared/ReactTypes';
 
 export interface Dispatcher {
-  current: Dispatch | null;
+  useState: <S>(initState: S | (() => S)) => [S, Dispatch<S>];
 }
 
-export type Dispatch = {
-  useState: <S>(initState: S | (() => S)) => [S, (action: Action<S>) => void];
-};
-const dispatcher: Dispatcher = {
+export type Dispatch<S> = (action: Action<S>) => void;
+
+const currentDispatcher: { current: Dispatcher | null } = {
   current: null
 };
 
 export const resolveDispatcher = () => {
-  const current = dispatcher.current;
+  const current = currentDispatcher.current;
 
   if (current === null) {
-    throw new Error('hook只能在react上下文中使用');
+    throw new Error('hook只能在函数组件中使用');
   }
 
   return current;
 };
+
+export default currentDispatcher;

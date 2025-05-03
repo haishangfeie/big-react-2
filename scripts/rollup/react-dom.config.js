@@ -28,6 +28,7 @@ export default [
         format: 'umd'
       }
     ],
+    external: [...Object.keys(pkg.peerDependencies)],
     plugins: [
       ...getBaseRollupPlugins(),
       generatePackageJson({
