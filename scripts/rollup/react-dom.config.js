@@ -18,13 +18,13 @@ export default [
       // react17
       {
         file: resolvePath(outputPath, 'index.js'),
-        name: 'react-dom',
+        name: 'reactDOM',
         format: 'umd'
       },
       // react18
       {
         file: resolvePath(outputPath, 'client.js'),
-        name: 'react-dom',
+        name: 'client',
         format: 'umd'
       }
     ],

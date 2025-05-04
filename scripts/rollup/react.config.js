@@ -15,7 +15,7 @@ export default [
     input: resolvePath(pkgPath, pkg.module),
     output: {
       file: resolvePath(outputPath, 'index.js'),
-      name: 'react',
+      name: 'React',
       format: 'umd'
     },
     plugins: [
@@ -38,12 +38,12 @@ export default [
     output: [
       {
         file: resolvePath(outputPath, 'jsx-runtime.js'),
-        name: 'jsx',
+        name: 'jsx-runtime',
         format: 'umd'
       },
       {
         file: resolvePath(outputPath, 'jsx-dev-runtime.js'),
-        name: 'jsx',
+        name: 'jsx-dev-runtime',
         format: 'umd'
       }
     ],
