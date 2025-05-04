@@ -1,6 +1,6 @@
 import internals from 'shared/internals';
 import { FiberNode } from './fiber';
-import { Dispatcher } from 'react/src/currentDispatcher';
+import { Dispatch, Dispatcher } from 'react/src/currentDispatcher';
 import {
   createUpdate,
   createUpdateQueue,
@@ -27,6 +27,7 @@ export function renderWidthHooks(wip: FiberNode) {
   // 设置当前的fiber
   currentlyRenderingFiber = wip;
   workInProgressHook = null;
+  wip.memoizedState = null;
 
   const current = wip.alternate;
 
@@ -51,9 +52,7 @@ const HostDispatcherOnMount: Dispatcher = {
   useState: mountState
 };
 
-function mountState<S>(
-  initialState: S | (() => S)
-): [S, (action: Action<S>) => void] {
+function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
   if (currentlyRenderingFiber === null) {
     throw new Error('useState只能在函数组件中使用');
   }
@@ -99,9 +98,10 @@ function mountWorkInProgressHook() {
   if (workInProgressHook === null) {
     // 第一个hook
     if (currentlyRenderingFiber === null) {
-      throw new Error('useState只能在函数组件内使用');
+      throw new Error('请在函数组件内调用hook');
     }
     currentlyRenderingFiber.memoizedState = hook;
+    workInProgressHook = hook;
   } else {
     workInProgressHook.next = hook;
     workInProgressHook = hook;

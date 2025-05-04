@@ -1,13 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-const App = () => (
-  <div>
-    <Child />
-  </div>
-);
-
-const Child = () => {
-  return <span>big-react-2</span>;
+const App = () => {
+  const [num, setNum] = useState(100);
+  window.setNum = setNum;
+  return <div>{num}</div>;
 };
+
 createRoot(document.getElementById('root')!).render(<App />);
