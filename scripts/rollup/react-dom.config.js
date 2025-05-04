@@ -12,6 +12,7 @@ const pkgPath = resolvePkgPath(pkg.name);
 const outputPath = resolvePkgPath(pkg.name, true);
 
 export default [
+  // react-dom
   {
     input: resolvePath(pkgPath, pkg.module),
     output: [
@@ -60,5 +61,18 @@ export default [
         }
       })
     ]
+  },
+  // react-test-utils
+  {
+    input: resolvePath(pkgPath, 'test-utils.ts'),
+    output: [
+      {
+        file: resolvePath(outputPath, 'test-utils.js'),
+        name: 'testUtils',
+        format: 'umd'
+      }
+    ],
+    external: ['react', 'react-dom'],
+    plugins: getBaseRollupPlugins()
   }
 ];
