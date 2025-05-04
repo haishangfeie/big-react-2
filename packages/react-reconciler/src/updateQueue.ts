@@ -8,6 +8,7 @@ export interface UpdateQueue<State> {
   shared: {
     pending: Update<State> | null;
   };
+  dispatch: ((action: Action<State>) => void) | null;
 }
 
 export const createUpdate = <State>(action: Action<State>): Update<State> => {
@@ -20,7 +21,8 @@ export const createUpdateQueue = <State>(): UpdateQueue<State> => {
   return {
     shared: {
       pending: null
-    }
+    },
+    dispatch: null
   };
 };
 
