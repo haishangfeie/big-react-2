@@ -16,5 +16,6 @@ export default {
     'node_modules'
   ],
   rootDir: projectRoot,
-  modulePathIgnorePatterns: ['<rootDir>/.history']
+  modulePathIgnorePatterns: ['<rootDir>/.history'],
+  testEnvironment: 'jsdom'
 };
