@@ -13,9 +13,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
   };
   const reconcileSingleElement = (
     returnFiber: FiberNode,
-    // @ts-expect-error TS6133 - 参数暂时未使用
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    currentFiber: FiberNode | null,
+    _currentFiber: FiberNode | null,
     newChild: ReactElementType
   ) => {
     const fiber = createFiberFromElement(newChild);
@@ -24,9 +22,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
   };
   const reconcileSingleTextNode = (
     returnFiber: FiberNode,
-    // @ts-expect-error TS6133 - 参数暂时未使用
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    currentFiber: FiberNode | null,
+    _currentFiber: FiberNode | null,
     content: string | number
   ) => {
     const fiber = new FiberNode(HostText, { content }, null);

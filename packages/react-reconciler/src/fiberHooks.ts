@@ -18,9 +18,7 @@ export type Hook = {
 
 const { currentDispatcher } = internals;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let currentlyRenderingFiber: FiberNode | null = null;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let workInProgressHook: Hook | null = null;
 
 export function renderWidthHooks(wip: FiberNode) {
