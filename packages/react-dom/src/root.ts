@@ -11,7 +11,7 @@ export function createRoot(container: Container) {
   const root = createContainer(container);
   return {
     render(element: ReactElementType | null) {
-      updateContainer(element, root);
+      return updateContainer(element, root);
     }
   };
 }

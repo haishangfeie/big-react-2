@@ -5,7 +5,15 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   { files: ['**/*.{js,mjs,cjs,ts}'] },
-  { languageOptions: { globals: globals.browser } },
+  {
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.jest,
+        ...globals.node
+      }
+    }
+  },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   eslintPluginPrettierRecommended,
@@ -19,6 +27,12 @@ export default [
           varsIgnorePattern: '^_' // 忽略以 _ 开头的变量
         }
       ]
+    }
+  },
+  {
+    files: ['**/__tests__/**/*.{js,mjs,cjs,ts}'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off'
     }
   }
 ];

@@ -17,5 +17,8 @@ export default {
   ],
   rootDir: projectRoot,
   modulePathIgnorePatterns: ['<rootDir>/.history'],
-  testEnvironment: 'jsdom'
+  testEnvironment: 'jsdom',
+  transform: {
+    '\\.[jt]sx?$': 'babel-jest'
+  }
 };

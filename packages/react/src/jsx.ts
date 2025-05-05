@@ -39,7 +39,7 @@ export const jsx = (type: ElementType, config: any, ...maybeChildren: any) => {
     }
     if (prop === 'ref') {
       if (val !== void 0) {
-        ref = val + '';
+        ref = val;
       }
       continue;
     }
@@ -75,7 +75,7 @@ export const jsxDEV = (type: ElementType, config: any) => {
     }
     if (prop === 'ref') {
       if (val !== void 0) {
-        ref = val + '';
+        ref = val;
       }
       continue;
     }
