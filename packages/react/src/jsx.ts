@@ -87,3 +87,11 @@ export const jsxDEV = (type: ElementType, config: any) => {
 
   return ReactElement(type, key, ref, props);
 };
+
+export const isValidElement = (obj: any) => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    obj.$$typeof === REACT_ELEMENT_TYPE
+  );
+};

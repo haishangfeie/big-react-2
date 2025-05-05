@@ -3,7 +3,8 @@ import currentDispatcher, {
   resolveDispatcher,
   Dispatcher
 } from './src/currentDispatcher';
-import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
+
+export { isValidElement } from './src/jsx';
 
 export const useState: Dispatcher['useState'] = (initState) => {
   const dispatcher = resolveDispatcher();
@@ -18,11 +19,3 @@ export const version = '0.0.0';
 
 // TODO: 后续createElement应根据环境使用jsx和jsxDEV
 export const createElement = jsx;
-
-export const isValidElement = (obj: any) => {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    obj.$$typeof === REACT_ELEMENT_TYPE
-  );
-};
