@@ -28,10 +28,11 @@ function ChildReconciler(shouldTrackEffects: boolean) {
       return;
     }
 
-    if (!Array.isArray(returnFiber.deletions)) {
+    const deletions = returnFiber.deletions;
+    if (!Array.isArray(deletions)) {
       returnFiber.deletions = [childToDelete];
     } else {
-      returnFiber.deletions.push(childToDelete);
+      deletions.push(childToDelete);
     }
     returnFiber.flags |= ChildDeletion;
   };
@@ -50,9 +51,8 @@ function ChildReconciler(shouldTrackEffects: boolean) {
             existing.return = returnFiber;
             markUpdate(existing);
             return existing;
-          } else {
-            deleteChild(returnFiber, currentFiber);
           }
+          deleteChild(returnFiber, currentFiber);
         } else {
           if (__DEV__) {
             console.warn(`reconcileSingleElement未处理的newChild:`, newChild);
@@ -73,12 +73,15 @@ function ChildReconciler(shouldTrackEffects: boolean) {
     currentFiber: FiberNode | null,
     content: string | number
   ) => {
-    let fiber = null;
-    if (typeof currentFiber?.pendingProps.content === 'string') {
-      fiber = useFiber(currentFiber, { content });
-    } else {
-      fiber = new FiberNode(HostText, { content }, null);
+    if (currentFiber !== null) {
+      if (currentFiber.tag === HostText) {
+        const existing = useFiber(currentFiber, { content });
+        existing.return = returnFiber;
+        return existing;
+      }
+      deleteChild(returnFiber, currentFiber);
     }
+    const fiber = new FiberNode(HostText, { content }, null);
     fiber.return = returnFiber;
     return fiber;
   };
@@ -107,6 +110,10 @@ function ChildReconciler(shouldTrackEffects: boolean) {
       return placeSingleChild(
         reconcileSingleTextNode(returnFiber, currentFiber, newChild)
       );
+    }
+
+    if (currentFiber) {
+      deleteChild(returnFiber, currentFiber);
     }
 
     if (__DEV__) {
