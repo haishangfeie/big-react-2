@@ -4,7 +4,7 @@ import {
   createWorkInProgress,
   FiberNode
 } from './fiber';
-import { ChildDeletion, Placement, Update } from './fiberFlags';
+import { ChildDeletion, Placement } from './fiberFlags';
 import { HostText } from './workTags';
 import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
 import { Props } from 'shared/ReactTypes';
@@ -16,13 +16,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
     }
     return fiber;
   };
-  const markUpdate = (fiber: FiberNode) => {
-    if (!shouldTrackEffects) {
-      return;
-    }
-    fiber.flags |= Update;
-    return fiber;
-  };
+
   const deleteChild = (returnFiber: FiberNode, childToDelete: FiberNode) => {
     if (!shouldTrackEffects) {
       return;
@@ -49,7 +43,6 @@ function ChildReconciler(shouldTrackEffects: boolean) {
           if (newChild.type === currentFiber.type) {
             const existing = useFiber(currentFiber, newChild.props);
             existing.return = returnFiber;
-            markUpdate(existing);
             return existing;
           }
           deleteChild(returnFiber, currentFiber);
