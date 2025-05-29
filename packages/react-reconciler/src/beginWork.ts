@@ -60,6 +60,6 @@ function reconcileChildren(wip: FiberNode, newChild: ReactElementType | null) {
   if (current === null) {
     wip.child = mountChildFibers(wip, null, newChild);
   } else {
-    wip.child = reconcileChildFibers(wip, current, newChild);
+    wip.child = reconcileChildFibers(wip, current.child, newChild);
   }
 }
