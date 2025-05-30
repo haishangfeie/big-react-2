@@ -1,6 +1,6 @@
 import {
   appendChildToContainer,
-  commitTextUpdate,
+  commitUpdate,
   Container,
   removeChild
 } from 'hostConfig';
@@ -78,26 +78,6 @@ const commitPlacement = (finishedWork: FiberNode) => {
   const parent = getHostParent(finishedWork);
   if (parent) {
     appendPlacementNodeIntoContainer(finishedWork, parent);
-  }
-};
-
-const commitUpdate = (fiber: FiberNode) => {
-  if (__DEV__) {
-    console.warn('执行Update操作', fiber);
-  }
-  switch (fiber.tag) {
-    case HostText: {
-      const content = fiber.pendingProps.content;
-      const textInstance = fiber.stateNode;
-      commitTextUpdate(textInstance, content);
-      return;
-    }
-
-    default:
-      if (__DEV__) {
-        console.warn('commitUpdate未处理fiber', fiber);
-      }
-      break;
   }
 };
 
@@ -188,7 +168,7 @@ const commitNestedComponent = (
   while (true) {
     onCommitUnmount(node);
 
-    while (node.child) {
+    if (node.child) {
       node.child.return = node;
       node = node.child;
       continue;
@@ -199,10 +179,10 @@ const commitNestedComponent = (
     }
 
     while (node.sibling === null) {
-      node = node.return;
-      if (node === root || node === null) {
+      if (node.return === root || node.return === null) {
         return;
       }
+      node = node.return;
     }
 
     node.sibling.return = node.return;
