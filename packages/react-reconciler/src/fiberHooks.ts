@@ -33,7 +33,7 @@ export function renderWidthHooks(wip: FiberNode) {
     // update
   } else {
     // mount
-    currentDispatcher.current = HostDispatcherOnMount;
+    currentDispatcher.current = HooksDispatcherOnMount;
   }
 
   const Component = wip.type;
@@ -46,7 +46,7 @@ export function renderWidthHooks(wip: FiberNode) {
   return children;
 }
 
-const HostDispatcherOnMount: Dispatcher = {
+const HooksDispatcherOnMount: Dispatcher = {
   useState: mountState
 };
 
