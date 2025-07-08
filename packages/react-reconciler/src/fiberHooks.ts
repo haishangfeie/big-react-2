@@ -91,14 +91,18 @@ function updateState<S>(): [S, Dispatch<S>] {
   }
   const hook = updateWorkInProgressHook();
 
-  const { memoizedState: oldState, updateQueue } = hook;
+  const { memoizedState: oldState } = hook;
+  const updateQueue = hook.updateQueue as UpdateQueue<S>;
 
-  const pending = (updateQueue as UpdateQueue<S>).shared.pending;
-  const { memoizedState } = processUpdateQueue(oldState, pending);
+  const pending = updateQueue.shared.pending;
 
-  hook.memoizedState = memoizedState;
+  if (pending !== null) {
+    const { memoizedState } = processUpdateQueue(oldState, pending);
+    hook.memoizedState = memoizedState;
+  }
+
   return [
-    memoizedState,
+    hook.memoizedState,
     /* 
       updateQueue.dispatch 这里我还是有疑问的：
       dispatch是应该要复用原来的函数，因为这样才能保证引用不变，
@@ -122,7 +126,7 @@ function updateState<S>(): [S, Dispatch<S>] {
 
       这是为了让 useCallback(fn, [dispatch]) 等语义成立。只有保证 dispatch 在生命周期内引用不变，React 才能避免不必要的重渲染或副作用执行。
     */
-    (updateQueue as UpdateQueue<S>).dispatch as Dispatch<S>
+    updateQueue.dispatch as Dispatch<S>
   ];
 }
 
@@ -159,6 +163,7 @@ function mountWorkInProgressHook() {
 }
 
 function updateWorkInProgressHook() {
+  // TODO: render 阶段触发的更新
   if (currentlyRenderingFiber === null) {
     // 获取hook时一定是要在函数组件内，因此获取不到currentlyRenderingFiber是不正常的
     throw new Error('获取hook必须要在函数组件内');
@@ -178,7 +183,11 @@ function updateWorkInProgressHook() {
     nextHook = currentHook.next;
   }
   if (nextHook === null) {
-    throw new Error('当前执行函数的hook比之前执行函数的hook多');
+    // 组件本次执行的hook比上次执行的多
+    throw new Error(
+      '当前执行函数的hook比之前执行函数的hook多',
+      currentlyRenderingFiber.type
+    );
   }
   currentHook = nextHook;
   const newHook = {
