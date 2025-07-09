@@ -1,13 +1,14 @@
 import { FiberNode } from 'react-reconciler/src/fiber';
 import { HostText } from 'react-reconciler/src/workTags';
+import { updateFiberProps } from './SyntheticEvent';
 
 export type Container = Element;
 export type Instance = Element;
 export type TextInstance = Text;
 
-export const createInstance = (type: string, _props: any) => {
-  // TODO: 暂时不处理props
+export const createInstance = (type: string, props: any) => {
   const el = document.createElement(type as keyof HTMLElementTagNameMap);
+  updateFiberProps(el, props);
   return el;
 };
 
