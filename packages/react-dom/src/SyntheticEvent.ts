@@ -28,11 +28,11 @@ const validEventTypeList = ['click'];
 
 export function initEvent(container: Container, eventType: string) {
   if (!validEventTypeList.includes(eventType)) {
-    console.warn(`${eventType}不支持合成事件`);
+    console.warn(`当前不支持${eventType}合成事件`);
     return;
   }
   if (__DEV__) {
-    console.log('initEvent开始执行');
+    console.log('初始化事件:', eventType);
   }
   container.addEventListener(eventType, (e: Event) => {
     dispatchEvent(container, eventType, e);
@@ -42,10 +42,22 @@ export function initEvent(container: Container, eventType: string) {
 function dispatchEvent(container: Container, eventType: string, e: Event) {
   // 收集沿途的事件
   const target = e.target as DOMElement;
-  const paths = collectPaths(target, container, eventType);
+  if (!target) {
+    console.warn('事件target不存在', e);
+    return;
+  }
+  const { bubble, capture } = collectPaths(target, container, eventType);
   // 构建合成对象
   const se = createSyntheticEvent(e);
-  triggerEventFlow(paths, se);
+
+  /* 
+    我发现我有一个误区，event.stopPropagation() 会阻止事件在捕获和冒泡阶段的进一步传播，不仅阻止冒泡，还会阻止捕获。之前我误以为stopPropagation只会阻止捕获。所以我的实现存在问题。
+   */
+  triggerEventFlow(capture, se);
+  if (se.__isStopPropagation) {
+    return;
+  }
+  triggerEventFlow(bubble, se);
 }
 
 function collectPaths(
@@ -53,24 +65,22 @@ function collectPaths(
   container: Container,
   eventType: string
 ) {
+  let target: DOMElement | null = targetElement;
   const paths: Paths = {
     bubble: [],
     capture: []
   };
-  while (targetElement !== container) {
+  while (target && target !== container) {
     const [captureCallbackName, bubbleCallbackName] =
       getEventCallbackNameFromEventType(eventType) || [];
-    const props = targetElement[elementPropsKey];
+    const props = target[elementPropsKey];
     if (captureCallbackName && props[captureCallbackName]) {
       paths.capture.unshift(props[captureCallbackName]);
     }
     if (bubbleCallbackName && props[bubbleCallbackName]) {
       paths.bubble.push(props[bubbleCallbackName]);
     }
-    const parent = targetElement.parentNode as DOMElement;
-    if (parent) {
-      targetElement = parent;
-    }
+    target = target.parentNode as DOMElement | null;
   }
   return paths;
 }
@@ -85,29 +95,25 @@ function createSyntheticEvent(e: Event) {
   const se = e as SyntheticEvent;
   se.__isStopPropagation = false;
 
-  const stopPropagationSource = e.stopPropagation;
+  const originStopPropagation = e.stopPropagation;
   se.stopPropagation = () => {
-    stopPropagationSource.call(se);
     se.__isStopPropagation = true;
+    if (originStopPropagation) {
+      originStopPropagation();
+    }
   };
   return se;
 }
 
-function triggerEventFlow(paths: Paths, se: SyntheticEvent) {
-  // 遍历capture
-  for (let i = 0; i < paths.capture.length; i++) {
-    const cb = paths.capture[i];
-    cb.call(null, se);
-  }
-  // 遍历bubble
+function triggerEventFlow(paths: EventCallback[], se: SyntheticEvent) {
   if (se.__isStopPropagation) {
     return;
   }
-  for (let i = 0; i < paths.bubble.length; i++) {
+  for (let i = 0; i < paths.length; i++) {
     if (se.__isStopPropagation) {
       break;
     }
-    const cb = paths.bubble[i];
+    const cb = paths[i];
     cb.call(null, se);
   }
 }
