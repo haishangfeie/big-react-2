@@ -8,13 +8,14 @@ const App = () => {
       onClick={() => {
         console.log('我是父元素');
       }}
-      onClickCapture={() => {
+      onClickCapture={(e) => {
+        e.stopPropagation();
+        console.log('我是父元素-捕获');
         setNum((i) => i + 1);
       }}
     >
       <div
         onClick={(e) => {
-          e.stopPropagation();
           console.log('我是内层元素');
         }}
       >

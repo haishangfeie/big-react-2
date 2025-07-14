@@ -99,7 +99,7 @@ function createSyntheticEvent(e: Event) {
   se.stopPropagation = () => {
     se.__isStopPropagation = true;
     if (originStopPropagation) {
-      originStopPropagation();
+      originStopPropagation.call(se);
     }
   };
   return se;
