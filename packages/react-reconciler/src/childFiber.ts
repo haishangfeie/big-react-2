@@ -65,7 +65,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
           if (__DEV__) {
             console.warn(`reconcileSingleElement未处理的newChild:`, newChild);
           }
-          return null;
+          break;
         }
       } else {
         deleteChild(returnFiber, currentFiber);
