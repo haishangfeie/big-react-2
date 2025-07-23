@@ -97,7 +97,9 @@ function appendAllChildren(parent: Container, wip: FiberNode) {
         return;
       }
     }
-    ((node as FiberNode).sibling as FiberNode).return = node;
+    ((node as FiberNode).sibling as FiberNode).return = (
+      node as FiberNode
+    ).return;
     node = (node as FiberNode).sibling;
   }
 }
