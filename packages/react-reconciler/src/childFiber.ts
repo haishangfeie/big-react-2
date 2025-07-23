@@ -113,10 +113,11 @@ function ChildReconciler(shouldTrackEffects: boolean) {
     */
     // 1. 将current及其同级节点都存入Map中
     const existingChildren: ExistingChildren = new Map();
-    const fiber = currentFirstChild;
+    let fiber = currentFirstChild;
     while (fiber) {
       const keyToUse = fiber.key !== null ? fiber.key : fiber.index;
       existingChildren.set(keyToUse, fiber);
+      fiber = fiber.sibling;
     }
     // 2. 遍历newChild
     // 当前处理的新节点中，所有对应的可复用的旧节点在旧列表中最后（靠右）的索引
@@ -150,10 +151,11 @@ function ChildReconciler(shouldTrackEffects: boolean) {
         // mount
         newFiber.flags |= Placement;
       } else {
-        if (current.index < lastPlacedIndex) {
+        const oldIndex = current.index;
+        if (oldIndex < lastPlacedIndex) {
           newFiber.flags |= Placement;
         } else {
-          lastPlacedIndex = current.index;
+          lastPlacedIndex = oldIndex;
         }
       }
     }
@@ -212,25 +214,36 @@ function updateFromMap(
   const keyToUse = element.key !== null ? element.key : index;
   const beforeFiber = existingChildren.get(keyToUse);
   if (typeof element === 'string' || typeof element === 'number') {
-    if (!beforeFiber) {
-      return new FiberNode(HostText, { content: element + '' }, null);
-    } else {
-      existingChildren.delete(keyToUse);
-      return useFiber(beforeFiber, { content: element + '' });
+    if (beforeFiber) {
+      if (beforeFiber.tag === HostText) {
+        existingChildren.delete(keyToUse);
+        return useFiber(beforeFiber, { content: element + '' });
+      }
+    }
+
+    return new FiberNode(HostText, { content: element + '' }, null);
+  }
+  if (typeof element === 'object' && element !== null) {
+    switch (element.$$typeof) {
+      case REACT_ELEMENT_TYPE: {
+        if (beforeFiber) {
+          if (element.type === beforeFiber.type) {
+            existingChildren.delete(keyToUse);
+            return useFiber(beforeFiber, element.props);
+          }
+        }
+
+        return createFiberFromElement(element);
+      }
+      default: {
+        if (Array.isArray(element) && __DEV__) {
+          console.warn('还不支持数组类型的element', element);
+        }
+        return null;
+      }
     }
   }
-  if (element.$$typeof === REACT_ELEMENT_TYPE) {
-    if (!beforeFiber) {
-      return createFiberFromElement(element);
-    }
-    if (element.type === beforeFiber.type) {
-      existingChildren.delete(keyToUse);
-      return useFiber(beforeFiber, element.props);
-    }
-  }
-  if (Array.isArray(element)) {
-    console.warn('还不支持数组类型的element', element);
-  }
+
   return null;
 }
 
