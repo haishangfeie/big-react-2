@@ -25,6 +25,14 @@ export const createTextInstance = (content: string) => {
 
 export const appendChildToContainer = appendInitialChild;
 
+export const insertChildToContainer = (
+  child: Instance,
+  container: Container,
+  before: Instance
+) => {
+  return container.insertBefore(child, before);
+};
+
 export const commitUpdate = (fiber: FiberNode) => {
   if (__DEV__) {
     console.warn('执行Update操作', fiber);

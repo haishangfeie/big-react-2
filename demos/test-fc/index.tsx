@@ -2,31 +2,21 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 const App = () => {
-  const [num, setNum] = useState(100);
+  const [num, setNum] = useState(1);
+  const arr =
+    num % 2 === 0
+      ? [<li key="1">1</li>, <li key="2">2</li>, <li key="3">3</li>]
+      : [<li key="3">3</li>, <li key="2">2</li>, <li key="1">1</li>];
   return (
-    <div
+    <ul
       onClick={() => {
-        console.log('我是父元素');
-      }}
-      onClickCapture={(e) => {
-        e.stopPropagation();
-        console.log('我是父元素-捕获');
         setNum((i) => i + 1);
       }}
     >
-      <div
-        onClick={(e) => {
-          console.log('我是内层元素');
-        }}
-      >
-        {num}
-      </div>
-    </div>
+      {arr}
+    </ul>
   );
 };
 
-const Child = () => {
-  return <div>react</div>;
-};
 
 createRoot(document.getElementById('root')!).render(<App />);
