@@ -171,8 +171,8 @@ function ChildReconciler(shouldTrackEffects: boolean) {
     currentFiber: FiberNode | null,
     newChild?: ReactElementType | null
   ) {
-    // 单节点
     if (typeof newChild === 'object' && newChild !== null) {
+      // 单节点
       if (newChild.$$typeof === REACT_ELEMENT_TYPE) {
         const fiber = reconcileSingleElement(
           returnFiber,
@@ -181,6 +181,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
         );
         return fiber ? placeSingleChild(fiber) : null;
       }
+      // 多节点
       if (Array.isArray(newChild)) {
         return reconcileChildrenArray(returnFiber, currentFiber, newChild);
       }
@@ -194,8 +195,9 @@ function ChildReconciler(shouldTrackEffects: boolean) {
       );
     }
 
+    // 兜底删除
     if (currentFiber) {
-      deleteChild(returnFiber, currentFiber);
+      deleteRemainingChildren(returnFiber, currentFiber);
     }
 
     if (__DEV__) {

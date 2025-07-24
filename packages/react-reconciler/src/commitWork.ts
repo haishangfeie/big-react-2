@@ -112,8 +112,12 @@ function getHostSibling(fiber: FiberNode) {
 
   findSibling: while (node !== null) {
     if (node.sibling === null) {
-      const parent = node.return as FiberNode;
-      if (parent.tag === HostRoot || parent.tag === HostComponent) {
+      const parent: FiberNode | null = node.return;
+      if (
+        parent === null ||
+        parent.tag === HostRoot ||
+        parent.tag === HostComponent
+      ) {
         return null;
       }
       node = parent;
@@ -130,6 +134,7 @@ function getHostSibling(fiber: FiberNode) {
       }
       const child: FiberNode | null = node.child;
       if (child) {
+        child.return = node;
         node = child;
       } else {
         continue findSibling;
@@ -207,9 +212,10 @@ const insertOrAppendPlacementNodeIntoContainer = (
 ) => {
   if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
     if (before) {
-      return insertChildToContainer(finishedWork.stateNode, hostParent, before);
+      insertChildToContainer(finishedWork.stateNode, hostParent, before);
     }
-    return appendChildToContainer(hostParent, finishedWork.stateNode);
+    appendChildToContainer(hostParent, finishedWork.stateNode);
+    return;
   }
   let node = finishedWork.child;
   while (node !== null) {
