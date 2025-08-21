@@ -9,14 +9,16 @@ const App = () => {
       : [<li key="3">3</li>, <li key="2">2</li>, <li key="1">1</li>];
   return (
     <ul
-      onClick={() => {
-        setNum((i) => i + 1);
-      }}
+      onClick={() =>
+        setNum((i) => {
+          return i + 1;
+        })
+      }
     >
       {arr}
+      <li key="4">0</li>
     </ul>
   );
 };
-
 
 createRoot(document.getElementById('root')!).render(<App />);

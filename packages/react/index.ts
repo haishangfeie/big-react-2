@@ -1,4 +1,5 @@
 import { jsx } from './src/jsx';
+export { Fragment } from './src/jsx';
 import currentDispatcher, {
   resolveDispatcher,
   Dispatcher

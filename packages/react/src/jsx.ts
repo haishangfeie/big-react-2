@@ -1,4 +1,4 @@
-import { REACT_ELEMENT_TYPE } from 'shared/ReactSymbols';
+import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from 'shared/ReactSymbols';
 import type {
   ReactElementType,
   Type,
@@ -95,3 +95,5 @@ export const isValidElement = (obj: any) => {
     obj.$$typeof === REACT_ELEMENT_TYPE
   );
 };
+
+export const Fragment = REACT_FRAGMENT_TYPE;

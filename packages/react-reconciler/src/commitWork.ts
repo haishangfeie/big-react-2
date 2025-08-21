@@ -147,7 +147,6 @@ function getHostSibling(fiber: FiberNode) {
 
 const commitDeletion = (childToDelete: FiberNode) => {
   let rootHostNode: FiberNode | null = null;
-
   commitNestedComponent(childToDelete, (fiber) => {
     switch (fiber.tag) {
       case HostComponent:
@@ -173,14 +172,73 @@ const commitDeletion = (childToDelete: FiberNode) => {
   });
 
   if (rootHostNode) {
+    const childrenToDelete: FiberNode[] = recordHostChildrenToDelete(
+      childToDelete,
+      rootHostNode
+    );
+
     const hostParent = getHostParent(rootHostNode);
     if (hostParent) {
-      removeChild((rootHostNode as FiberNode).stateNode, hostParent);
+      childrenToDelete.forEach((node) => {
+        removeChild(node.stateNode, hostParent);
+      });
     }
   }
   childToDelete.return = null;
   childToDelete.child = null;
 };
+
+function recordHostChildrenToDelete(
+  childToDelete: FiberNode,
+  unmountFirstFiber: FiberNode
+): FiberNode[] {
+  const childrenToDelete = [unmountFirstFiber];
+
+  let node = unmountFirstFiber;
+
+  // 这时如果dom节点是在sibling 对应的dom相邻的dom节点就加入到数组
+  // 怎么做呢？
+  /*
+      lastOne 可能有相邻的fiber,也可能没有
+      也就是向右找邻fiber，接着往下找host 节点，
+      就往上，再尝试往右
+      也就是3个方向
+      往右：找邻fiber
+      往下：找host节点对应的fiber
+      往上：找挂载非host fiber
+    */
+  findSibling: while (true) {
+    // 向右：找sibling
+    const sibling = node.sibling;
+
+    if (sibling === null) {
+      // 向上：找父节点
+      const returnFiber = node.return;
+      if (returnFiber === childToDelete || returnFiber === null) {
+        break;
+      }
+      node = returnFiber;
+      continue;
+    }
+    node = sibling;
+
+    // 向下
+    while (node) {
+      if (node.tag === HostComponent || node.tag === HostText) {
+        childrenToDelete.push(node);
+        continue findSibling;
+      }
+      const child = node.child;
+      if (child !== null) {
+        node = child;
+      } else {
+        break;
+      }
+    }
+  }
+
+  return childrenToDelete;
+}
 
 const getHostParent = (fiber: FiberNode) => {
   let node: FiberNode | null = fiber.return;
