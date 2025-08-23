@@ -247,10 +247,10 @@ function updateFromMap(
 
     return new FiberNode(HostText, { content: element + '' }, null);
   }
+  if (Array.isArray(element)) {
+    return updateFragment(beforeFiber, element, keyToUse, existingChildren);
+  }
   if (typeof element === 'object' && element !== null) {
-    if (Array.isArray(element)) {
-      return updateFragment(beforeFiber, element, keyToUse, existingChildren);
-    }
     switch (element.$$typeof) {
       case REACT_ELEMENT_TYPE: {
         if (element.type === REACT_FRAGMENT_TYPE) {
