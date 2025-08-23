@@ -253,21 +253,22 @@ function updateFromMap(
     }
     switch (element.$$typeof) {
       case REACT_ELEMENT_TYPE: {
+        if (element.type === REACT_FRAGMENT_TYPE) {
+          return updateFragment(
+            beforeFiber,
+            element.props.children,
+            keyToUse,
+            existingChildren
+          );
+        }
         if (beforeFiber) {
           if (element.type === beforeFiber.type) {
             existingChildren.delete(keyToUse);
-            let props = element.props;
-            if (element.type === REACT_FRAGMENT_TYPE) {
-              props = element.props.children;
-            }
+            const props = element.props;
             return useFiber(beforeFiber, props);
           }
         }
-        if (element.type === REACT_FRAGMENT_TYPE) {
-          return createFiberFromFragment(element.props.children, keyToUse);
-        } else {
-          return createFiberFromElement(element);
-        }
+        return createFiberFromElement(element);
       }
       default: {
         return null;
