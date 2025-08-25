@@ -1,5 +1,6 @@
 import { Dispatch } from 'react/src/currentDispatcher';
 import { Action } from 'shared/ReactTypes';
+import { Lane } from './fiberLanes';
 
 export interface Update<State> {
   action: Action<State>;
@@ -7,6 +8,7 @@ export interface Update<State> {
     之所以 update要新增next属性，是因为react 要实现批处理（多次触发更新合并为一次更新处理）。实现批处理，意味着一次更新的流程里面，需要记录多次update，要在现有结构上支持顺序处理update，因此将update改造为一个闭环链表。
    */
   next: Update<any> | null;
+  lane: Lane;
 }
 
 export interface UpdateQueue<State> {
@@ -16,10 +18,14 @@ export interface UpdateQueue<State> {
   dispatch: Dispatch<State> | null;
 }
 
-export const createUpdate = <State>(action: Action<State>): Update<State> => {
+export const createUpdate = <State>(
+  action: Action<State>,
+  lane: Lane
+): Update<State> => {
   return {
     action,
-    next: null
+    next: null,
+    lane
   };
 };
 

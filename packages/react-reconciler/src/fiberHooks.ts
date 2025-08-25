@@ -10,6 +10,7 @@ import {
 } from './updateQueue';
 import { Action } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
+import { requestUpdateLane } from './fiberLanes';
 
 export type Hook = {
   memoizedState: any;
@@ -135,9 +136,10 @@ function dispatchSetState<S>(
   updateQueue: UpdateQueue<S>,
   action: Action<S>
 ) {
-  const update = createUpdate(action);
+  const lane = requestUpdateLane();
+  const update = createUpdate(action, lane);
   enqueueUpdate(updateQueue, update);
-  scheduleUpdateOnFiber(fiber);
+  scheduleUpdateOnFiber(fiber, lane);
 }
 
 function mountWorkInProgressHook() {

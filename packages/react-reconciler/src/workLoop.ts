@@ -4,16 +4,22 @@ import { completeWork } from './completeWork';
 import { HostRoot } from './workTags';
 import { MutationMask, NoFlags } from './fiberFlags';
 import { commitMutationEffects } from './commitWork';
+import { Lane, mergeLanes } from './fiberLanes';
 
 let workInProgress: FiberNode | null = null;
 
-export const scheduleUpdateOnFiber = (fiber: FiberNode) => {
+export const scheduleUpdateOnFiber = (fiber: FiberNode, lane: Lane) => {
   const root = markUpdateFromFiberToRoot(fiber);
 
   if (root !== null) {
+    markRootUpdated(root, lane);
     renderRoot(root);
   }
 };
+
+function markRootUpdated(root: FiberRootNode, lane: Lane) {
+  root.pendingLanes = mergeLanes(root.pendingLanes, lane);
+}
 
 export const markUpdateFromFiberToRoot = (
   fiber: FiberNode
