@@ -4,7 +4,14 @@ import { completeWork } from './completeWork';
 import { HostRoot } from './workTags';
 import { MutationMask, NoFlags } from './fiberFlags';
 import { commitMutationEffects } from './commitWork';
-import { Lane, mergeLanes } from './fiberLanes';
+import {
+  getHighestPriorityLane,
+  Lane,
+  mergeLanes,
+  NoLane,
+  SyncLane
+} from './fiberLanes';
+import { scheduleSyncCallback } from './syncTaskQueue';
 
 let workInProgress: FiberNode | null = null;
 
@@ -13,9 +20,23 @@ export const scheduleUpdateOnFiber = (fiber: FiberNode, lane: Lane) => {
 
   if (root !== null) {
     markRootUpdated(root, lane);
-    renderRoot(root);
+
+    ensureRootIsScheduled(root);
   }
 };
+
+function ensureRootIsScheduled(root: FiberRootNode) {
+  const lane = getHighestPriorityLane(root.pendingLanes);
+  if (lane === NoLane) {
+    return;
+  }
+  if (lane === SyncLane) {
+    // 同步优先级，使用微任务
+    scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
+  } else {
+    // 其他优先级使用宏任务
+  }
+}
 
 function markRootUpdated(root: FiberRootNode, lane: Lane) {
   root.pendingLanes = mergeLanes(root.pendingLanes, lane);
@@ -38,7 +59,14 @@ function prepareFreshStack(root: FiberRootNode) {
   workInProgress = createWorkInProgress(root.current, {});
 }
 
-function renderRoot(root: FiberRootNode) {
+function performSyncWorkOnRoot(root: FiberRootNode) {
+  const nextLane = getHighestPriorityLane(root.pendingLanes);
+  if (nextLane !== SyncLane) {
+    // 这里有两种可能，一种是NoLane，一种是其他优先级
+    // NoLane是不需要执行渲染，其他优先级是要执行渲染，这里可以统一用ensureRootIsScheduled
+    ensureRootIsScheduled(root);
+    return;
+  }
   // 初始化
   prepareFreshStack(root);
 
