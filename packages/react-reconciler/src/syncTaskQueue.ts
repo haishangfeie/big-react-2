@@ -13,6 +13,7 @@ export function scheduleSyncCallback(callback: () => void) {
 function flushSyncCallback() {
   if (syncQueue.length) {
     try {
+      console.log('syncQueue.length', syncQueue.length);
       syncQueue.forEach((cb) => cb());
     } catch (error) {
       console.log('flushSyncCallback 报错', error);

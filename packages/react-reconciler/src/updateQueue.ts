@@ -1,6 +1,6 @@
 import { Dispatch } from 'react/src/currentDispatcher';
 import { Action } from 'shared/ReactTypes';
-import { Lane } from './fiberLanes';
+import { Lane, NoLane } from './fiberLanes';
 
 export interface Update<State> {
   action: Action<State>;
@@ -54,16 +54,35 @@ export const enqueueUpdate = <State>(
 
 export const processUpdateQueue = <State>(
   baseState: State,
-  pendingUpdate: Update<State> | null
+  pendingUpdate: Update<State> | null,
+  renderLane: Lane
 ): { memoizedState: State } => {
+  let newState = baseState;
   if (pendingUpdate !== null) {
-    const action = pendingUpdate.action;
-    if (action instanceof Function) {
-      return { memoizedState: action(baseState) };
+    const first = pendingUpdate.next;
+    let currentUpdate = first;
+    if (currentUpdate !== null) {
+      do {
+        const action = currentUpdate.action;
+        const lane = currentUpdate.lane;
+        if ((lane & renderLane) === NoLane) {
+          currentUpdate = currentUpdate.next as Update<State>;
+          continue;
+        }
+        if (action instanceof Function) {
+          newState = action(newState);
+        } else {
+          newState = action;
+        }
+        currentUpdate = currentUpdate.next as Update<State>;
+      } while (currentUpdate !== first);
+    } else {
+      // 因为pendingUpdate存在是，应该是闭环链表
+      console.error('currentUpdate不应该是null');
     }
-    return { memoizedState: action };
   }
+
   return {
-    memoizedState: baseState
+    memoizedState: newState
   };
 };

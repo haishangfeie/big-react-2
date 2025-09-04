@@ -7,6 +7,7 @@ import { commitMutationEffects } from './commitWork';
 import {
   getHighestPriorityLane,
   Lane,
+  markRootFinished,
   mergeLanes,
   NoLane,
   SyncLane
@@ -14,6 +15,7 @@ import {
 import { scheduleSyncCallback } from './syncTaskQueue';
 
 let workInProgress: FiberNode | null = null;
+let wipRootRenderLane: Lane = NoLane;
 
 export const scheduleUpdateOnFiber = (fiber: FiberNode, lane: Lane) => {
   const root = markUpdateFromFiberToRoot(fiber);
@@ -58,11 +60,15 @@ export const markUpdateFromFiberToRoot = (
   return null;
 };
 
-function prepareFreshStack(root: FiberRootNode) {
+function prepareFreshStack(root: FiberRootNode, renderLane: Lane) {
   workInProgress = createWorkInProgress(root.current, {});
+  wipRootRenderLane = renderLane;
 }
 
 function performSyncWorkOnRoot(root: FiberRootNode) {
+  if (__DEV__) {
+    console.log('执行performSyncWorkOnRoot方法');
+  }
   const nextLane = getHighestPriorityLane(root.pendingLanes);
   if (nextLane !== SyncLane) {
     // 这里有两种可能，一种是NoLane，一种是其他优先级
@@ -71,7 +77,7 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
     return;
   }
   // 初始化
-  prepareFreshStack(root);
+  prepareFreshStack(root, SyncLane);
 
   // try {
   //   workLoop();
@@ -96,6 +102,10 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
   } while (true);
 
   root.finishedWork = root.current.alternate;
+  // 记录本次更新消费的lane
+  root.finishedLane = wipRootRenderLane;
+  markRootFinished(root, wipRootRenderLane);
+  wipRootRenderLane = NoLane;
 
   commitRoot(root);
 }
@@ -107,7 +117,7 @@ function workLoop() {
 }
 
 function performUnitOfWork(wip: FiberNode) {
-  const next = beginWork(wip);
+  const next = beginWork(wip, wipRootRenderLane);
   wip.memoizedProps = wip.pendingProps;
 
   if (next !== null) {

@@ -10,7 +10,7 @@ import {
 } from './updateQueue';
 import { Action } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
-import { requestUpdateLane } from './fiberLanes';
+import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
 
 export type Hook = {
   memoizedState: any;
@@ -25,11 +25,14 @@ let workInProgressHook: Hook | null = null;
 // currentHook存的是currentFiber里当前指向的hook
 let currentHook: Hook | null = null;
 
-export function renderWidthHooks(wip: FiberNode) {
+let currentRenderLane = NoLane;
+
+export function renderWidthHooks(wip: FiberNode, renderLane: Lane) {
   // 设置当前的fiber
   currentlyRenderingFiber = wip;
   workInProgressHook = null;
   wip.memoizedState = null;
+  currentRenderLane = renderLane;
 
   const current = wip.alternate;
 
@@ -49,6 +52,7 @@ export function renderWidthHooks(wip: FiberNode) {
   currentlyRenderingFiber = null;
   workInProgressHook = null;
   currentHook = null;
+  currentRenderLane = NoLane;
   return children;
 }
 
@@ -96,9 +100,13 @@ function updateState<S>(): [S, Dispatch<S>] {
   const updateQueue = hook.updateQueue as UpdateQueue<S>;
 
   const pending = updateQueue.shared.pending;
-
+  updateQueue.shared.pending = null;
   if (pending !== null) {
-    const { memoizedState } = processUpdateQueue(oldState, pending);
+    const { memoizedState } = processUpdateQueue(
+      oldState,
+      pending,
+      currentRenderLane
+    );
     hook.memoizedState = memoizedState;
   }
 

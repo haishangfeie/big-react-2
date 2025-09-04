@@ -2,22 +2,23 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 const App = () => {
-  const [num, setNum] = useState(1);
-  const arr =
-    num % 2 === 0
-      ? [<li key="1">1</li>, <li key="2">2</li>, <li key="3">3</li>]
-      : [<li key="3">3</li>, <li key="2">2</li>, <li key="1">1</li>];
+  const [num, setNum] = useState(100);
   return (
-    <ul
-      onClick={() =>
+    <div
+      onClick={() => {
         setNum((i) => {
           return i + 1;
-        })
-      }
+        });
+        setNum((i) => {
+          return i + 1;
+        });
+        setNum((i) => {
+          return i + 1;
+        });
+      }}
     >
-      {arr}
-      <li key="4">0</li>
-    </ul>
+      {num}
+    </div>
   );
 };
 

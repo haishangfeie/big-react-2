@@ -10,17 +10,18 @@ import {
 } from './workTags';
 import { reconcileChildFibers, mountChildFibers } from './childFiber';
 import { renderWidthHooks } from './fiberHooks';
+import { Lane } from './fiberLanes';
 
-export function beginWork(wip: FiberNode): FiberNode | null {
+export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   switch (wip.tag) {
     case HostRoot:
-      return updateHootRoot(wip);
+      return updateHootRoot(wip, renderLane);
     case HostComponent:
       return updateHostComponent(wip);
     case HostText:
       return null;
     case FunctionComponent:
-      return updateFunctionComponent(wip);
+      return updateFunctionComponent(wip, renderLane);
     case Fragment:
       return updateFragment(wip);
       break;
@@ -34,12 +35,12 @@ export function beginWork(wip: FiberNode): FiberNode | null {
   return null;
 }
 
-function updateHootRoot(wip: FiberNode) {
+function updateHootRoot(wip: FiberNode, renderLane: Lane) {
   const baseState = wip.memoizedState;
   const updateQueue = wip.updateQueue as UpdateQueue<ReactElementType | null>;
   const pending = updateQueue.shared.pending;
   updateQueue.shared.pending = null;
-  const { memoizedState } = processUpdateQueue(baseState, pending);
+  const { memoizedState } = processUpdateQueue(baseState, pending, renderLane);
   wip.memoizedState = memoizedState;
   const newChild = memoizedState;
   reconcileChildren(wip, newChild);
@@ -53,8 +54,8 @@ function updateHostComponent(wip: FiberNode) {
   return wip.child;
 }
 
-function updateFunctionComponent(wip: FiberNode) {
-  const children = renderWidthHooks(wip);
+function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
+  const children = renderWidthHooks(wip, renderLane);
   reconcileChildren(wip, children);
   return wip.child;
 }
