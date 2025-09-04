@@ -32,6 +32,9 @@ function ensureRootIsScheduled(root: FiberRootNode) {
   }
   if (lane === SyncLane) {
     // 同步优先级，使用微任务
+    if (__DEV__) {
+      console.log('在微任务中调度，优先级是', SyncLane);
+    }
     scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
   } else {
     // 其他优先级使用宏任务
