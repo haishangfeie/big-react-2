@@ -104,7 +104,6 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
   root.finishedWork = root.current.alternate;
   // 记录本次更新消费的lane
   root.finishedLane = wipRootRenderLane;
-  markRootFinished(root, wipRootRenderLane);
   wipRootRenderLane = NoLane;
 
   commitRoot(root);
@@ -165,6 +164,13 @@ function commitRoot(root: FiberRootNode) {
 
   // 重置
   root.finishedWork = null;
+
+  const lane = root.finishedLane;
+  if (lane === NoLane && __DEV__) {
+    console.error('commit阶段不应该存在root.finishedLane为NoLane');
+  }
+  root.finishedLane = NoLane;
+  markRootFinished(root, lane);
 
   // 判断是否要执行3个子阶段
   // TODO: 当前仅判断mutation

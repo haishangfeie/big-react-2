@@ -20,5 +20,6 @@ export function getHighestPriorityLane(lanes: Lanes): Lane {
 }
 
 export function markRootFinished(root: FiberRootNode, lane: Lane) {
-  root.pendingLanes = root.pendingLanes & ~lane;
+  // root.pendingLanes = root.pendingLanes & ~lane;
+  root.pendingLanes &= ~lane;
 }
