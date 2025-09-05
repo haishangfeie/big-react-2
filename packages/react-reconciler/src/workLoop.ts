@@ -76,6 +76,9 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
     ensureRootIsScheduled(root);
     return;
   }
+  if (__DEV__) {
+    console.warn('render阶段开始');
+  }
   // 初始化
   prepareFreshStack(root, SyncLane);
 
