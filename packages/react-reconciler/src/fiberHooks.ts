@@ -11,12 +11,30 @@ import {
 import { Action } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
+import { EffectTag, HookHasEffect, Passive } from './hookEffectTags';
+import { PassiveEffect } from './fiberFlags';
 
 export type Hook = {
   memoizedState: any;
   updateQueue: UpdateQueue<any> | null;
   next: Hook | null;
 };
+
+type EffectCallback = () => void | EffectCleanup;
+type EffectCleanup = () => void;
+type EffectDeps = any[] | null;
+
+type Effect = {
+  tag: EffectTag;
+  create: EffectCallback | void;
+  destroy: EffectCleanup | void;
+  deps: EffectDeps | void;
+  next: Effect | null;
+} | null;
+
+export interface FCUpdateQueue<State> extends UpdateQueue<State> {
+  lastEffect: Effect | void;
+}
 
 const { currentDispatcher } = internals;
 
@@ -57,11 +75,13 @@ export function renderWidthHooks(wip: FiberNode, renderLane: Lane) {
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
-  useState: mountState
+  useState: mountState,
+  useEffect: mountEffect
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
-  useState: updateState
+  useState: updateState,
+  useEffect: updateEffect
 };
 
 function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
@@ -214,3 +234,62 @@ function updateWorkInProgressHook() {
   }
   return workInProgressHook;
 }
+
+function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+  const hook = mountWorkInProgressHook();
+  const fiber = currentlyRenderingFiber as FiberNode;
+  fiber.flags |= PassiveEffect;
+  const effect = pushEffect(Passive | HookHasEffect, create, void 0, deps);
+  hook.memoizedState = effect;
+
+  if (!workInProgressHook) {
+    workInProgressHook = hook;
+  } else {
+    workInProgressHook.next = hook;
+    workInProgressHook = hook;
+  }
+}
+
+function pushEffect(
+  tag: EffectTag,
+  create: EffectCallback | void,
+  destroy: EffectCleanup | void,
+  deps: EffectDeps | void
+): Effect {
+  const effect: Effect = {
+    tag,
+    create,
+    destroy,
+    deps,
+    next: null
+  };
+  const fiber = currentlyRenderingFiber as FiberNode;
+  if (!fiber.updateQueue) {
+    fiber.updateQueue = createFCUpdateQueue();
+    (fiber.updateQueue as FCUpdateQueue<any>).lastEffect = effect;
+    effect.next = effect;
+  } else {
+    const lastEffect = (fiber.updateQueue as FCUpdateQueue<any>).lastEffect;
+
+    if (!lastEffect) {
+      (fiber.updateQueue as FCUpdateQueue<any>).lastEffect = effect;
+      effect.next = effect;
+    } else {
+      const firstEffect = lastEffect.next;
+      lastEffect.next = effect;
+      effect.next = firstEffect;
+      (fiber.updateQueue as FCUpdateQueue<any>).lastEffect = effect;
+    }
+  }
+
+  return effect;
+}
+
+function createFCUpdateQueue(): FCUpdateQueue<any> {
+  const updateQueue = createUpdateQueue() as FCUpdateQueue<any>;
+  updateQueue.lastEffect = null;
+  return updateQueue;
+}
+
+// TODO: 待实现
+function updateEffect() {}
