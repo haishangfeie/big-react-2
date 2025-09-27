@@ -236,18 +236,15 @@ function updateWorkInProgressHook() {
 }
 
 function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+  if (currentlyRenderingFiber === null) {
+    throw new Error('useEffect只能在函数组件中使用');
+  }
   const hook = mountWorkInProgressHook();
+
   const fiber = currentlyRenderingFiber as FiberNode;
   fiber.flags |= PassiveEffect;
   const effect = pushEffect(Passive | HookHasEffect, create, void 0, deps);
   hook.memoizedState = effect;
-
-  if (!workInProgressHook) {
-    workInProgressHook = hook;
-  } else {
-    workInProgressHook.next = hook;
-    workInProgressHook = hook;
-  }
 }
 
 function pushEffect(
