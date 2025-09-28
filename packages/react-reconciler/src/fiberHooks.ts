@@ -28,12 +28,12 @@ type Effect = {
   tag: EffectTag;
   create: EffectCallback | void;
   destroy: EffectCleanup | void;
-  deps: EffectDeps | void;
+  deps: EffectDeps;
   next: Effect | null;
-} | null;
+};
 
 export interface FCUpdateQueue<State> extends UpdateQueue<State> {
-  lastEffect: Effect | void;
+  lastEffect: Effect | null;
 }
 
 const { currentDispatcher } = internals;
@@ -243,7 +243,12 @@ function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
 
   const fiber = currentlyRenderingFiber as FiberNode;
   fiber.flags |= PassiveEffect;
-  const effect = pushEffect(Passive | HookHasEffect, create, void 0, deps);
+  const effect = pushEffect(
+    Passive | HookHasEffect,
+    create,
+    void 0,
+    deps || null
+  );
   hook.memoizedState = effect;
 }
 
@@ -251,7 +256,7 @@ function pushEffect(
   tag: EffectTag,
   create: EffectCallback | void,
   destroy: EffectCleanup | void,
-  deps: EffectDeps | void
+  deps: EffectDeps
 ): Effect {
   const effect: Effect = {
     tag,
@@ -261,8 +266,9 @@ function pushEffect(
     next: null
   };
   const fiber = currentlyRenderingFiber as FiberNode;
+
   if (!fiber.updateQueue) {
-    fiber.updateQueue = createFCUpdateQueue();
+    fiber.updateQueue = createFCUpdateQueue<any>();
     (fiber.updateQueue as FCUpdateQueue<any>).lastEffect = effect;
     effect.next = effect;
   } else {
@@ -282,8 +288,8 @@ function pushEffect(
   return effect;
 }
 
-function createFCUpdateQueue(): FCUpdateQueue<any> {
-  const updateQueue = createUpdateQueue() as FCUpdateQueue<any>;
+function createFCUpdateQueue<State>(): FCUpdateQueue<State> {
+  const updateQueue = createUpdateQueue<State>() as FCUpdateQueue<State>;
   updateQueue.lastEffect = null;
   return updateQueue;
 }
