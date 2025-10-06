@@ -17,6 +17,7 @@
     "noImplicitReturns": false,
     "skipLibCheck": true,
     "baseUrl": "./packages",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "hostConfig": ["./react-dom/src/hostConfig.ts"]
     }
