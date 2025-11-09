@@ -3,16 +3,6 @@ import { createRoot } from 'react-dom/client';
 
 function App() {
   const [num, updateNum] = useState(0);
-  useEffect(() => {
-    console.log('App mount');
-  }, []);
-
-  useEffect(() => {
-    console.log('num change create', num);
-    return () => {
-      console.log('num change destroy', num);
-    };
-  }, [num]);
 
   return (
     <div onClick={() => updateNum(num + 1)}>
@@ -22,21 +12,14 @@ function App() {
 }
 
 function Child() {
-  const [num, updateNum] = useState(0);
   useEffect(() => {
     console.log('Child mount');
     return () => {
       console.log('Child unmount');
     };
   }, []);
-  useEffect(() => {
-    console.log('Child num create');
-    return () => {
-      console.log('Child num change');
-    };
-  }, [num]);
 
-  return num;
+  return '我是child';
 }
 
 createRoot(document.getElementById('root')!).render(<App />);

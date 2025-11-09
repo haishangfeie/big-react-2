@@ -7,7 +7,12 @@ import {
 import { beginWork } from './beginWork';
 import { completeWork } from './completeWork';
 import { HostRoot } from './workTags';
-import { MutationMask, NoFlags, PassiveEffect } from './fiberFlags';
+import {
+  MutationMask,
+  NoFlags,
+  PassiveEffect,
+  PassiveMask
+} from './fiberFlags';
 import {
   commitHookEffectListCreate,
   commitHookEffectListDestroy,
@@ -192,10 +197,10 @@ function commitRoot(root: FiberRootNode) {
   root.finishedLane = NoLane;
   markRootFinished(root, lane);
 
-  const rootHasEffect = (finishedWork.flags & PassiveEffect) !== NoFlags;
-  const subtreeHasEffect =
-    (finishedWork.subtreeFlags & PassiveEffect) !== NoFlags;
-  if (rootHasEffect || subtreeHasEffect) {
+  const rootNeedScheduleEffect = (finishedWork.flags & PassiveMask) !== NoFlags;
+  const subtreeNeedScheduleEffect =
+    (finishedWork.subtreeFlags & PassiveMask) !== NoFlags;
+  if (rootNeedScheduleEffect || subtreeNeedScheduleEffect) {
     // 调度effect
     if (!rootDoesHasPassiveEffect) {
       rootDoesHasPassiveEffect = true;
@@ -213,7 +218,9 @@ function commitRoot(root: FiberRootNode) {
   const rootHasMutation = (finishedWork.flags & MutationMask) !== NoFlags;
   const subtreeHasMutation =
     (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
-
+  const rootHasEffect = (finishedWork.flags & PassiveEffect) !== NoFlags;
+  const subtreeHasEffect =
+    (finishedWork.subtreeFlags & PassiveEffect) !== NoFlags;
   if (
     rootHasMutation ||
     subtreeHasMutation ||
