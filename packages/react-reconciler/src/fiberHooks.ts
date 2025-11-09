@@ -24,7 +24,7 @@ type EffectCallback = () => void | EffectCleanup;
 type EffectCleanup = () => void;
 type EffectDeps = any[] | null;
 
-type Effect = {
+export type Effect = {
   tag: EffectTag;
   create: EffectCallback | void;
   destroy: EffectCleanup | void;
@@ -50,6 +50,7 @@ export function renderWidthHooks(wip: FiberNode, renderLane: Lane) {
   currentlyRenderingFiber = wip;
   workInProgressHook = null;
   wip.memoizedState = null;
+  wip.updateQueue = null;
   currentRenderLane = renderLane;
 
   const current = wip.alternate;
@@ -294,5 +295,44 @@ function createFCUpdateQueue<State>(): FCUpdateQueue<State> {
   return updateQueue;
 }
 
-// TODO: 待实现
-function updateEffect() {}
+function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+  if (currentlyRenderingFiber === null) {
+    throw new Error('useEffect只能在函数组件中使用');
+  }
+  const hook = updateWorkInProgressHook();
+
+  const nextDeps = deps || null;
+  const prevEffect = hook.memoizedState;
+  const prevDeps = prevEffect.deps;
+  const destroy = prevEffect.destroy;
+
+  if (!areHookInputsEqual(nextDeps, prevDeps)) {
+    const effect = pushEffect(
+      Passive | HookHasEffect,
+      create,
+      destroy,
+      nextDeps
+    );
+    currentlyRenderingFiber.flags |= PassiveEffect;
+    hook.memoizedState = effect;
+    return;
+  }
+  const effect = pushEffect(Passive, create, destroy, nextDeps);
+  hook.memoizedState = effect;
+}
+
+function areHookInputsEqual(nextDeps: EffectDeps, prevDeps: EffectDeps) {
+  if (nextDeps === null || prevDeps === null) {
+    return false;
+  }
+  if (nextDeps.length !== prevDeps.length) {
+    return false;
+  }
+  for (let i = 0; i < nextDeps.length; i++) {
+    if (Object.is(nextDeps[i], prevDeps[i])) {
+      continue;
+    }
+    return false;
+  }
+  return true;
+}

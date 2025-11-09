@@ -1,9 +1,19 @@
-import { createWorkInProgress, FiberNode, FiberRootNode } from './fiber';
+import {
+  createWorkInProgress,
+  FiberNode,
+  FiberRootNode,
+  PendingPassiveEffects
+} from './fiber';
 import { beginWork } from './beginWork';
 import { completeWork } from './completeWork';
 import { HostRoot } from './workTags';
-import { MutationMask, NoFlags } from './fiberFlags';
-import { commitMutationEffects } from './commitWork';
+import { MutationMask, NoFlags, PassiveEffect } from './fiberFlags';
+import {
+  commitHookEffectListCreate,
+  commitHookEffectListDestroy,
+  commitHookEffectListUnmount,
+  commitMutationEffects
+} from './commitWork';
 import {
   getHighestPriorityLane,
   Lane,
@@ -16,6 +26,13 @@ import { scheduleSyncCallback } from './syncTaskQueue';
 
 let workInProgress: FiberNode | null = null;
 let wipRootRenderLane: Lane = NoLane;
+let rootDoesHasPassiveEffect: boolean = false;
+import {
+  unstable_scheduleCallback as scheduleCallback,
+  unstable_NormalPriority as NormalPriority
+} from 'scheduler';
+import { Effect } from './fiberHooks';
+import { HookHasEffect, Passive } from './hookEffectTags';
 
 export const scheduleUpdateOnFiber = (fiber: FiberNode, lane: Lane) => {
   const root = markUpdateFromFiberToRoot(fiber);
@@ -175,16 +192,37 @@ function commitRoot(root: FiberRootNode) {
   root.finishedLane = NoLane;
   markRootFinished(root, lane);
 
+  const rootHasEffect = (finishedWork.flags & PassiveEffect) !== NoFlags;
+  const subtreeHasEffect =
+    (finishedWork.subtreeFlags & PassiveEffect) !== NoFlags;
+  if (rootHasEffect || subtreeHasEffect) {
+    // 调度effect
+    if (!rootDoesHasPassiveEffect) {
+      rootDoesHasPassiveEffect = true;
+      scheduleCallback(NormalPriority, () => {
+        // 执行effect回调
+        flushPassiveEffects(root.pendingPassiveEffects);
+        rootDoesHasPassiveEffect = false;
+        performSyncWorkOnRoot(root);
+      });
+    }
+  }
+
   // 判断是否要执行3个子阶段
   // TODO: 当前仅判断mutation
-  const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
-  const subtreeHasEffect =
+  const rootHasMutation = (finishedWork.flags & MutationMask) !== NoFlags;
+  const subtreeHasMutation =
     (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
 
-  if (rootHasEffect || subtreeHasEffect) {
+  if (
+    rootHasMutation ||
+    subtreeHasMutation ||
+    rootHasEffect ||
+    subtreeHasEffect
+  ) {
     // TODO
     // mutation
-    commitMutationEffects(finishedWork);
+    commitMutationEffects(finishedWork, root);
 
     // 在mutation结束，layout开始前切换fiber树
     root.current = finishedWork;
@@ -192,4 +230,24 @@ function commitRoot(root: FiberRootNode) {
   } else {
     root.current = finishedWork;
   }
+
+  ensureRootIsScheduled(root);
+}
+
+function flushPassiveEffects(pendingPassiveEffects: PendingPassiveEffects) {
+  // 先执行组件卸载
+  // 再执行上一轮destroy
+  // 最后执行本次create
+  pendingPassiveEffects.unmount.forEach((lastEffect: Effect) => {
+    commitHookEffectListUnmount(Passive, lastEffect);
+  });
+  pendingPassiveEffects.update.forEach((lastEffect: Effect) => {
+    commitHookEffectListDestroy(Passive | HookHasEffect, lastEffect);
+  });
+  pendingPassiveEffects.update.forEach((lastEffect: Effect) => {
+    commitHookEffectListCreate(Passive | HookHasEffect, lastEffect);
+  });
+
+  pendingPassiveEffects.unmount = [];
+  pendingPassiveEffects.update = [];
 }

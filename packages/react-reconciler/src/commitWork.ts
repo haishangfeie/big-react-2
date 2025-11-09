@@ -6,11 +6,12 @@ import {
   Instance,
   removeChild
 } from 'hostConfig';
-import { FiberNode, FiberRootNode } from './fiber';
+import { FiberNode, FiberRootNode, PendingPassiveEffects } from './fiber';
 import {
   ChildDeletion,
   MutationMask,
   NoFlags,
+  PassiveEffect,
   Placement,
   Update
 } from './fiberFlags';
@@ -20,9 +21,14 @@ import {
   HostRoot,
   HostText
 } from './workTags';
+import { Effect, FCUpdateQueue } from './fiberHooks';
+import { EffectTag, HookHasEffect } from './hookEffectTags';
 
 let nextEffect: FiberNode | null = null;
-export const commitMutationEffects = (finishedWork: FiberNode) => {
+export const commitMutationEffects = (
+  finishedWork: FiberNode,
+  root: FiberRootNode
+) => {
   /* 我要做什么？我现在处理的Mutation阶段，因此看的是MutationMask相关的副作用
     通过subtreeFlags 往下遍历，直到subtreeFlags不存在，那么当前节点就
     只有本身有副作用，然后处理Placement(暂时只处理这个副作用)
@@ -32,7 +38,8 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
   while (nextEffect !== null) {
     const child: FiberNode | null = nextEffect.child;
     if (
-      (nextEffect.subtreeFlags & MutationMask) !== NoFlags &&
+      ((nextEffect.subtreeFlags & MutationMask) !== NoFlags ||
+        (nextEffect.subtreeFlags & PassiveEffect) !== NoFlags) &&
       child !== null
     ) {
       nextEffect = child;
@@ -40,7 +47,7 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
     }
 
     while (nextEffect !== null) {
-      commitMutationEffectsOnFiber(nextEffect);
+      commitMutationEffectsOnFiber(nextEffect, root);
       const sibling: FiberNode | null = nextEffect.sibling;
       if (sibling) {
         nextEffect = sibling;
@@ -52,8 +59,12 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
   }
 };
 
-const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
+const commitMutationEffectsOnFiber = (
+  finishedWork: FiberNode,
+  root: FiberRootNode
+) => {
   const flags = finishedWork.flags;
+
   if ((flags & Placement) !== NoFlags) {
     commitPlacement(finishedWork);
     finishedWork.flags &= ~Placement;
@@ -66,9 +77,45 @@ const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
   if ((flags & ChildDeletion) !== NoFlags) {
     const deletions = finishedWork.deletions || [];
     deletions.forEach((childToDelete) => {
-      commitDeletion(childToDelete);
+      commitDeletion(childToDelete, root);
     });
     finishedWork.flags &= ~ChildDeletion;
+  }
+
+  if ((flags & PassiveEffect) !== NoFlags) {
+    // 收集effect回调
+    commitPassiveEffect(finishedWork, root, 'update');
+    finishedWork.flags &= ~PassiveEffect;
+  }
+};
+
+const commitPassiveEffect = (
+  fiber: FiberNode,
+  root: FiberRootNode,
+  type: keyof PendingPassiveEffects
+) => {
+  if (fiber.tag !== FunctionComponent) {
+    if (__DEV__) {
+      console.warn('非FunctionComponent fiber,无法收集effect');
+    }
+    return;
+  }
+  const updateQueue = fiber.updateQueue as FCUpdateQueue<any>;
+  if (__DEV__) {
+    if (
+      (fiber.flags & PassiveEffect) !== NoFlags &&
+      (!updateQueue || !updateQueue.lastEffect)
+    ) {
+      console.warn('fiber.flags 包含PassiveEffect时，不应该不存在lastEffect');
+    }
+  }
+
+  if (!updateQueue) {
+    return;
+  }
+  const lastEffect = updateQueue.lastEffect;
+  if (lastEffect) {
+    root.pendingPassiveEffects[type].push(lastEffect);
   }
 };
 
@@ -145,12 +192,11 @@ function getHostSibling(fiber: FiberNode) {
   return null;
 }
 
-const commitDeletion = (childToDelete: FiberNode) => {
+const commitDeletion = (childToDelete: FiberNode, root: FiberRootNode) => {
   let rootHostNode: FiberNode | null = null;
   commitNestedComponent(childToDelete, (fiber) => {
     switch (fiber.tag) {
       case HostComponent:
-        // todo: 解绑ref
         if (rootHostNode === null) {
           rootHostNode = fiber;
         }
@@ -161,7 +207,8 @@ const commitDeletion = (childToDelete: FiberNode) => {
         }
         break;
       case FunctionComponent:
-        // todo: 处理useEffect unmount
+        // todo: 解绑ref
+        commitPassiveEffect(fiber, root, 'unmount');
         break;
       default:
         if (__DEV__) {
@@ -316,3 +363,65 @@ const commitNestedComponent = (
     node = node.sibling;
   }
 };
+
+function commitHookEffectList(
+  effectTag: EffectTag,
+  lastEffect: Effect,
+  callback: (effect: Effect) => void
+) {
+  let effect = lastEffect.next;
+  if (!effect) {
+    if (__DEV__) {
+      console.warn('effect不存在');
+    }
+    return;
+  }
+  do {
+    if (!effect) {
+      if (__DEV__) {
+        console.warn('effect不存在，lastEffect为', lastEffect);
+      }
+      return;
+    }
+    if ((effect.tag & effectTag) === effectTag) {
+      callback(effect);
+    }
+
+    effect = effect.next;
+  } while (effect !== lastEffect.next);
+}
+
+export function commitHookEffectListUnmount(
+  effectTag: EffectTag,
+  lastEffect: Effect
+) {
+  commitHookEffectList(effectTag, lastEffect, (effect) => {
+    if (typeof effect.destroy === 'function') {
+      effect.destroy();
+    }
+    effect.tag |= ~HookHasEffect;
+  });
+}
+
+export function commitHookEffectListDestroy(
+  effectTag: EffectTag,
+  lastEffect: Effect
+) {
+  commitHookEffectList(effectTag, lastEffect, (effect) => {
+    if (typeof effect.destroy === 'function') {
+      effect.destroy();
+    }
+  });
+}
+
+export function commitHookEffectListCreate(
+  effectTag: EffectTag,
+  lastEffect: Effect
+) {
+  commitHookEffectList(effectTag, lastEffect, (effect) => {
+    if (typeof effect.create === 'function') {
+      effect.destroy = effect.create();
+      effect.tag |= ~HookHasEffect;
+    }
+  });
+}
