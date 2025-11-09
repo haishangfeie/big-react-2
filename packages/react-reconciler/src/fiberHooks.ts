@@ -50,6 +50,7 @@ export function renderWidthHooks(wip: FiberNode, renderLane: Lane) {
   currentlyRenderingFiber = wip;
   workInProgressHook = null;
   wip.memoizedState = null;
+  // 重置effect链表
   wip.updateQueue = null;
   currentRenderLane = renderLane;
 
