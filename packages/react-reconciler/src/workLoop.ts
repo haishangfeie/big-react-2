@@ -27,17 +27,17 @@ import {
   NoLane,
   SyncLane
 } from './fiberLanes';
-import { scheduleSyncCallback } from './syncTaskQueue';
-
-let workInProgress: FiberNode | null = null;
-let wipRootRenderLane: Lane = NoLane;
-let rootDoesHasPassiveEffect: boolean = false;
+import { flushSyncCallback, scheduleSyncCallback } from './syncTaskQueue';
 import {
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority
 } from 'scheduler';
 import { Effect } from './fiberHooks';
 import { HookHasEffect, Passive } from './hookEffectTags';
+
+let workInProgress: FiberNode | null = null;
+let wipRootRenderLane: Lane = NoLane;
+let rootDoesHasPassiveEffect: boolean = false;
 
 export const scheduleUpdateOnFiber = (fiber: FiberNode, lane: Lane) => {
   const root = markUpdateFromFiberToRoot(fiber);
@@ -208,7 +208,8 @@ function commitRoot(root: FiberRootNode) {
         // 执行effect回调
         flushPassiveEffects(root.pendingPassiveEffects);
         rootDoesHasPassiveEffect = false;
-        performSyncWorkOnRoot(root);
+        console.log('同步执行');
+        flushSyncCallback();
       });
     }
   }

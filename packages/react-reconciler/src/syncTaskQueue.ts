@@ -10,8 +10,11 @@ export function scheduleSyncCallback(callback: () => void) {
   }
 }
 
-function flushSyncCallback() {
+export function flushSyncCallback() {
   if (syncQueue.length) {
+    if (__DEV__) {
+      console.log('flushSyncCallback开始执行');
+    }
     try {
       console.log('syncQueue.length', syncQueue.length);
       syncQueue.forEach((cb) => cb());
@@ -20,6 +23,9 @@ function flushSyncCallback() {
     } finally {
       isFlushingSyncQueue = false;
       syncQueue = [];
+      if (__DEV__) {
+        console.log('flushSyncCallback完成');
+      }
     }
   }
 }
