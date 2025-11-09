@@ -197,6 +197,7 @@ const commitDeletion = (childToDelete: FiberNode, root: FiberRootNode) => {
   commitNestedComponent(childToDelete, (fiber) => {
     switch (fiber.tag) {
       case HostComponent:
+        // todo: 解绑ref
         if (rootHostNode === null) {
           rootHostNode = fiber;
         }
