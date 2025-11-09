@@ -100,6 +100,15 @@ const commitPassiveEffect = (
     }
     return;
   }
+  if (type === 'update' && (fiber.flags & PassiveEffect) === NoFlags) {
+    if (__DEV__) {
+      console.warn(
+        'commitPassiveEffect type为update，但fiber.flags不包含PassiveEffect',
+        fiber
+      );
+    }
+    return;
+  }
   const updateQueue = fiber.updateQueue as FCUpdateQueue<any>;
   if (__DEV__) {
     if (
@@ -371,12 +380,6 @@ function commitHookEffectList(
   callback: (effect: Effect) => void
 ) {
   let effect = lastEffect.next;
-  if (!effect) {
-    if (__DEV__) {
-      console.warn('effect不存在');
-    }
-    return;
-  }
   do {
     if (!effect) {
       if (__DEV__) {
@@ -400,7 +403,7 @@ export function commitHookEffectListUnmount(
     if (typeof effect.destroy === 'function') {
       effect.destroy();
     }
-    effect.tag |= ~HookHasEffect;
+    effect.tag &= ~HookHasEffect;
   });
 }
 
@@ -422,7 +425,7 @@ export function commitHookEffectListCreate(
   commitHookEffectList(effectTag, lastEffect, (effect) => {
     if (typeof effect.create === 'function') {
       effect.destroy = effect.create();
-      effect.tag |= ~HookHasEffect;
+      effect.tag &= ~HookHasEffect;
     }
   });
 }
