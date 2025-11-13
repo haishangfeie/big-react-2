@@ -17,7 +17,10 @@ export function createRoot() {
   const root = createContainer(container);
 
   const getChildren = (parent: Container | Instance) => {
-    return parent.children;
+    if (parent) {
+      return parent.children;
+    }
+    return null;
   };
 
   const getChildrenAsJSX = (root: Container) => {
@@ -28,7 +31,7 @@ export function createRoot() {
         type: REACT_FRAGMENT_TYPE,
         key: null,
         ref: null,
-        props: children,
+        props: { children },
         __mark: 'big-react-2'
       };
     }
@@ -60,16 +63,17 @@ export function createRoot() {
     }
     // Instance
     if (Array.isArray(child.children)) {
+      const instance: Instance = child;
       const props: any = {
-        props: child.props
+        props: instance.props
       };
-      const children = childToJSX(child.children);
+      const children = childToJSX(instance.children);
       if (children !== null) {
         props.children = children;
       }
       return {
         $$typeof: REACT_ELEMENT_TYPE,
-        type: child.type,
+        type: instance.type,
         key: null,
         ref: null,
         props,
