@@ -13,7 +13,6 @@ import {
   HostText
 } from './workTags';
 import { NoFlags, Update } from './fiberFlags';
-import { updateFiberProps } from 'react-dom/src/SyntheticEvent';
 
 const markUpdate = (fiber: FiberNode) => {
   fiber.flags |= Update;
@@ -27,9 +26,9 @@ export function completeWork(wip: FiberNode) {
     case HostComponent:
       if (current !== null && wip.stateNode !== null) {
         // update
-        // !!! 注意这里简化了实现，正常的流程是在这里比较props的各个属性的变化，
+        // !!! 注意这里简化了实现，直接标记了Update。正常的流程是在这里比较props的各个属性的变化，
         // 标记Update，并且可以将变化存入fiber的updateQueue，例如以数组的形式存储 n表示变化的字段,n+1表示变化后的值
-        updateFiberProps(wip.stateNode, pendingProps);
+        markUpdate(wip);
       } else {
         const instance = createInstance(wip.type, pendingProps);
         appendAllChildren(instance, wip);

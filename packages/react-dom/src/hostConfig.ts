@@ -1,12 +1,13 @@
 import { FiberNode } from 'react-reconciler/src/fiber';
-import { HostText } from 'react-reconciler/src/workTags';
+import { HostComponent, HostText } from 'react-reconciler/src/workTags';
 import { updateFiberProps } from './SyntheticEvent';
+import { Props } from 'shared/ReactTypes';
 
 export type Container = Element;
 export type Instance = Element;
 export type TextInstance = Text;
 
-export const createInstance = (type: string, props: any) => {
+export const createInstance = (type: string, props: Props) => {
   const el = document.createElement(type as keyof HTMLElementTagNameMap);
   updateFiberProps(el, props);
   return el;
@@ -39,9 +40,13 @@ export const commitUpdate = (fiber: FiberNode) => {
   }
   switch (fiber.tag) {
     case HostText: {
-      const content = fiber.pendingProps.content;
+      const content = fiber.memoizedProps.content;
       const textInstance = fiber.stateNode;
       commitTextUpdate(textInstance, content);
+      return;
+    }
+    case HostComponent: {
+      updateFiberProps(fiber.stateNode, fiber.memoizedProps);
       return;
     }
 

@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { resolvePath, resolvePkgPath } from '../rollup/utils';
 import replace from '@rollup/plugin-replace';
 
-const reactDomPkgPath = resolvePkgPath('react-dom');
+const reactDomPkgPath = resolvePkgPath('react-noop-renderer');
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -16,7 +16,7 @@ export default defineConfig({
   resolve: {
     alias: {
       react: resolvePkgPath('react'),
-      'react-dom': reactDomPkgPath,
+      'react-noop-renderer': reactDomPkgPath,
       hostConfig: resolvePath(reactDomPkgPath, 'src/hostConfig.ts')
     }
   }
