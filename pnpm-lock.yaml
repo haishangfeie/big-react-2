@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      scheduler:
+        specifier: 0.23.0
+        version: 0.23.0
     devDependencies:
       '@babel/core':
         specifier: ^7.27.1
@@ -44,6 +48,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.0.8
         version: 18.3.7(@types/react@18.3.20)
+      '@types/scheduler':
+        specifier: ^0.26.0
+        version: 0.26.0
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.4.1(vite@6.3.4(@types/node@22.13.0)(jiti@2.4.2)(yaml@2.7.0))
@@ -128,16 +135,9 @@ importers:
 
   packages/react-reconciler:
     dependencies:
-      scheduler:
-        specifier: 0.23.0
-        version: 0.23.0
       shared:
         specifier: workspace:*
         version: link:../shared
-    devDependencies:
-      '@types/scheduler':
-        specifier: ^0.26.0
-        version: 0.26.0
 
   packages/shared: {}
 

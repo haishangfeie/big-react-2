@@ -3,11 +3,7 @@
   "version": "1.0.0",
   "description": "React协调器",
   "dependencies": {
-    "shared": "workspace:*",
-    "scheduler": "0.23.0"
-  },
-  "devDependencies": {
-    "@types/scheduler": "^0.26.0"
+    "shared": "workspace:*"
   },
   "keywords": [],
   "author": "",

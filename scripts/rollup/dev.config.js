@@ -1,4 +1,4 @@
 import reactDomConfig from './react-dom.config.js';
 import reactConfig from './react.config.js';
-
-export default [...reactDomConfig, ...reactConfig];
+import reactNoopRendererConfig from './react-noop-renderer.config.js';
+export default [...reactDomConfig, ...reactConfig, ...reactNoopRendererConfig];

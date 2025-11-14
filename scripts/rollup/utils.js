@@ -33,5 +33,5 @@ export const getBaseRollupPlugins = ({
     preventAssignment: true
   }
 } = {}) => {
-  return [replace(replaceOpt), typescript(typescriptOpt), commonjs()];
+  return [replace(replaceOpt), commonjs(), typescript(typescriptOpt)];
 };
