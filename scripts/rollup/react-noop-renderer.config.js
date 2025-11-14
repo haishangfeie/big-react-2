@@ -26,9 +26,9 @@ export default [
     external: [...Object.keys(pkg.peerDependencies), 'scheduler'],
     plugins: [
       alias({
-        entries: {
-          hostConfig: `${pkgPath}/src/hostConfig.ts`
-        }
+        entries: [
+          { find: 'hostConfig', replacement: `${pkgPath}/src/hostConfig.ts` }
+        ]
       }),
       ...getBaseRollupPlugins({
         typescriptOpt: {
