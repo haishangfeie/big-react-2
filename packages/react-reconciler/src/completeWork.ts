@@ -1,8 +1,8 @@
 import {
   appendInitialChild,
-  Container,
   createInstance,
-  createTextInstance
+  createTextInstance,
+  Instance
 } from 'hostConfig';
 import { FiberNode } from './fiber';
 import {
@@ -75,7 +75,7 @@ export function completeWork(wip: FiberNode) {
     <div></div>
   </div>
 */
-function appendAllChildren(parent: Container, wip: FiberNode) {
+function appendAllChildren(parent: Instance, wip: FiberNode) {
   let node = wip.child;
   if (node !== null) {
     node.return = wip;
