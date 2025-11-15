@@ -4,6 +4,9 @@ import tseslint from 'typescript-eslint';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 /** @type {import('eslint').Linter.Config[]} */
 export default [
+  {
+    ignores: ['scripts/**'] // 忽略 scripts 文件夹
+  },
   { files: ['**/*.{js,mjs,cjs,ts}'] },
   {
     languageOptions: {
