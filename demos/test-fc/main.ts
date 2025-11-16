@@ -7,7 +7,6 @@ function myScheduler() {
   const curWork = workList.pop();
   if (curWork) {
     perform(curWork);
-    myScheduler();
   }
 }
 
@@ -16,6 +15,7 @@ function perform(work: Work) {
     work.count--;
     insertSpan();
   }
+  myScheduler();
 }
 
 function insertSpan() {
