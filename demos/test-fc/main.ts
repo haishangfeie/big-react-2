@@ -30,7 +30,7 @@ if (btn) {
     const work = {
       count: 100
     };
-    workList.push(work);
+    workList.unshift(work);
     myScheduler();
   };
 }
