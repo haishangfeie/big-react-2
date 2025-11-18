@@ -61,7 +61,11 @@ function perform(work: Work, didTimeout: boolean): any {
     prevPriority = IdlePriority;
     curCb = null;
     const index = workList.indexOf(work);
-    workList.splice(index, 1);
+    if (index !== -1) {
+      console.log('移除work', work);
+      workList.splice(index, 1);
+      console.log('当前workList', JSON.stringify(workList));
+    }
   }
   const prevCb = curCb;
   myScheduler();
