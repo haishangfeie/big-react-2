@@ -1,3 +1,9 @@
+import {
+  unstable_ImmediatePriority,
+  unstable_NormalPriority,
+  unstable_runWithPriority,
+  unstable_UserBlockingPriority
+} from 'scheduler';
 import { Container } from 'hostConfig';
 import { Props } from 'shared/ReactTypes';
 
@@ -50,14 +56,16 @@ function dispatchEvent(container: Container, eventType: string, e: Event) {
   // 构建合成对象
   const se = createSyntheticEvent(e);
 
-  /* 
+  unstable_runWithPriority(eventTypeToSchedulerPriority(eventType), () => {
+    /* 
     我发现我有一个误区，event.stopPropagation() 会阻止事件在捕获和冒泡阶段的进一步传播，不仅阻止冒泡，还会阻止捕获。之前我误以为stopPropagation只会阻止捕获。所以我的实现存在问题。
    */
-  triggerEventFlow(capture, se);
-  if (se.__isStopPropagation) {
-    return;
-  }
-  triggerEventFlow(bubble, se);
+    triggerEventFlow(capture, se);
+    if (se.__isStopPropagation) {
+      return;
+    }
+    triggerEventFlow(bubble, se);
+  });
 }
 
 function collectPaths(
@@ -115,5 +123,18 @@ function triggerEventFlow(paths: EventCallback[], se: SyntheticEvent) {
     }
     const cb = paths[i];
     cb.call(null, se);
+  }
+}
+
+function eventTypeToSchedulerPriority(eventType: string) {
+  switch (eventType) {
+    case 'click':
+    case 'keydown':
+    case 'keyup':
+      return unstable_ImmediatePriority;
+    case 'scroll':
+      return unstable_UserBlockingPriority;
+    default:
+      return unstable_NormalPriority;
   }
 }
