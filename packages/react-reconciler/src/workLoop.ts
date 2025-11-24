@@ -112,6 +112,8 @@ export const markUpdateFromFiberToRoot = (
 };
 
 function prepareFreshStack(root: FiberRootNode, renderLane: Lane) {
+  root.finishedLane = NoLane;
+  root.finishedWork = null;
   workInProgress = createWorkInProgress(root.current, {});
   wipRootRenderLane = renderLane;
 }
@@ -130,7 +132,21 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
   if (__DEV__) {
     console.warn('render阶段开始');
   }
-  renderRoot(root, SyncLane, false);
+  const status = renderRoot(root, SyncLane, false);
+  root.callbackPriority = SyncLane;
+
+  if (status === RootCompleted) {
+    root.finishedWork = root.current.alternate;
+    // 记录本次更新消费的lane
+    root.finishedLane = wipRootRenderLane;
+    wipRootRenderLane = NoLane;
+    root.callbackPriority = NoLane;
+    root.callbackNode = null;
+    commitRoot(root);
+    return;
+  } else if (__DEV__) {
+    console.warn('同步更新state不应该不等于RootCompleted');
+  }
 }
 
 function workLoopSync() {
@@ -259,24 +275,61 @@ function flushPassiveEffects(pendingPassiveEffects: PendingPassiveEffects) {
   pendingPassiveEffects.update = [];
 }
 
-function performConCurrentWorkOnRoot(root: FiberRootNode, didTimeout: boolean) {
+function performConCurrentWorkOnRoot(
+  root: FiberRootNode,
+  didTimeout: boolean
+): any {
   if (__DEV__) {
     console.log('执行performConCurrentWorkOnRoot方法');
   }
   const nextLane = getHighestPriorityLane(root.pendingLanes);
-
+  if (nextLane === NoLane) {
+    if (root.callbackNode) {
+      cancelCallback(root.callbackNode);
+    }
+    root.callbackNode = null;
+    root.callbackPriority = NoLane;
+    return;
+  }
   flushPassiveEffects(root.pendingPassiveEffects);
   const newLane = getHighestPriorityLane(root.pendingLanes);
   if (nextLane !== newLane) {
     return;
   }
-  if (nextLane === NoLane) {
+
+  const status = renderRoot(root, nextLane, !didTimeout);
+  root.callbackPriority = nextLane;
+  if (status === RootCompleted) {
+    root.finishedWork = root.current.alternate;
+    // 记录本次更新消费的lane
+    root.finishedLane = wipRootRenderLane;
+    wipRootRenderLane = NoLane;
+    root.callbackPriority = NoLane;
+    root.callbackNode = null;
+    commitRoot(root);
     return;
   }
-  renderRoot(root, nextLane, !didTimeout);
+
+  if (status === RootInComplete) {
+    const prevCb = root.callbackNode;
+    ensureRootIsScheduled(root);
+    if (prevCb === root.callbackNode && root.callbackNode) {
+      return performConCurrentWorkOnRoot.bind(null, root);
+    } else {
+      return;
+    }
+  }
+
+  if (__DEV__) {
+    console.warn('并发更新还没实现的结束状态');
+  }
 }
 
-function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
+function renderRoot(
+  root: FiberRootNode,
+  lane: Lane,
+  shouldTimeSlice: boolean
+): RootExitStatus {
   if (__DEV__) {
     console.log(`render阶段进行${shouldTimeSlice ? '并发' : '同步'}更新`);
   }
@@ -296,10 +349,13 @@ function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
   // 两段代码的区别其实是在出错时，下面的代码会再执行workLoop
   // 但是因为workInProgress为null，因此workLoop的执行不会执行任何有意义的工作
   // 一个合理的推测是这里的do...while是后续的代码会用到的
-  let status;
   do {
     try {
-      status = shouldTimeSlice ? workLoopConcurrent() : workLoopSync();
+      if (shouldTimeSlice) {
+        workLoopConcurrent();
+      } else {
+        workLoopSync();
+      }
       break;
     } catch (error) {
       console.warn('workLoop发生错误', error);
@@ -307,37 +363,22 @@ function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
     }
     // eslint-disable-next-line no-constant-condition
   } while (true);
-  root.callbackPriority = lane;
-  if (status === RootCompleted) {
-    root.finishedWork = root.current.alternate;
-    // 记录本次更新消费的lane
-    root.finishedLane = wipRootRenderLane;
-    wipRootRenderLane = NoLane;
-    root.callbackPriority = NoLane;
-    root.callbackNode = null;
-    commitRoot(root);
-    return;
+
+  // 中断或者完成
+  if (shouldTimeSlice && workInProgress !== null) {
+    return RootInComplete;
   }
 
-  if (status === RootInComplete) {
-    const prevCb = root.callbackNode;
-    ensureRootIsScheduled(root);
-    if (prevCb === root.callbackNode && root.callbackNode) {
-      return performConCurrentWorkOnRoot.bind(null, root);
-    }
+  if (!shouldTimeSlice && workInProgress !== null && __DEV__) {
+    console.error('同步更新，render阶段结束时wip不应该不是null');
   }
+  // TODO: 没有处理报错的场景
 
-  // TODO: status为报错时
+  return RootCompleted;
 }
 
 function workLoopConcurrent() {
   while (workInProgress !== null && !shouldYield()) {
     performUnitOfWork(workInProgress);
   }
-
-  // 中断或者完成
-  const status: RootExitStatus =
-    workInProgress !== null ? RootInComplete : RootCompleted;
-
-  return status;
 }
