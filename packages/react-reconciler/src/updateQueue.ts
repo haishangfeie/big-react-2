@@ -60,13 +60,13 @@ export const processUpdateQueue = <State>(
   let newState = baseState;
   if (pendingUpdate !== null) {
     const first = pendingUpdate.next;
-    let currentUpdate = first;
-    if (currentUpdate !== null) {
+    let pending = first;
+    if (pending !== null) {
       do {
-        const action = currentUpdate.action;
-        const lane = currentUpdate.lane;
+        const action = pending.action;
+        const lane = pending.lane;
         if ((lane & renderLane) === NoLane) {
-          currentUpdate = currentUpdate.next as Update<State>;
+          pending = pending.next as Update<State>;
           continue;
         }
         if (action instanceof Function) {
@@ -77,8 +77,8 @@ export const processUpdateQueue = <State>(
         // 使用 Update<any> 是为了避免类型系统在闭环链表遍历中强制要求每个 update 的 State 类型一致。
         // 实际上，整个队列通常是针对某个组件的状态类型，但 TypeScript 无法在链表结构中精确推断。
         // 因此这里使用 any 是一种类型擦除的策略，以保证遍历逻辑的通用性
-        currentUpdate = currentUpdate.next as Update<any>;
-      } while (currentUpdate !== first);
+        pending = pending.next as Update<any>;
+      } while (pending !== first);
     } else {
       // 因为pendingUpdate存在是，应该是闭环链表
       console.error('currentUpdate不应该是null');
