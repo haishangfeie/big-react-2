@@ -15,7 +15,7 @@ import { Lane } from './fiberLanes';
 export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   switch (wip.tag) {
     case HostRoot:
-      return updateHootRoot(wip, renderLane);
+      return updateHostRoot(wip, renderLane);
     case HostComponent:
       return updateHostComponent(wip);
     case HostText:
@@ -35,7 +35,7 @@ export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   return null;
 }
 
-function updateHootRoot(wip: FiberNode, renderLane: Lane) {
+function updateHostRoot(wip: FiberNode, renderLane: Lane) {
   const baseState = wip.memoizedState;
   const updateQueue = wip.updateQueue as UpdateQueue<ReactElementType | null>;
   const pending = updateQueue.shared.pending;
