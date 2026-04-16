@@ -6,6 +6,7 @@ import {
   createUpdateQueue,
   enqueueUpdate,
   processUpdateQueue,
+  Update,
   UpdateQueue
 } from './updateQueue';
 import { Action } from 'shared/ReactTypes';
@@ -18,6 +19,8 @@ export type Hook = {
   memoizedState: any;
   updateQueue: UpdateQueue<any> | null;
   next: Hook | null;
+  baseQueue: Update<any> | null;
+  baseState: any;
 };
 
 type EffectCallback = () => void | EffectCleanup;
@@ -122,14 +125,17 @@ function updateState<S>(): [S, Dispatch<S>] {
   const updateQueue = hook.updateQueue as UpdateQueue<S>;
 
   const pending = updateQueue.shared.pending;
+
   updateQueue.shared.pending = null;
   if (pending !== null) {
-    const { memoizedState } = processUpdateQueue(
+    const { memoizedState, baseQueue, baseState } = processUpdateQueue(
       oldState,
       pending,
       currentRenderLane
     );
     hook.memoizedState = memoizedState;
+    hook.baseQueue = baseQueue;
+    hook.baseState = baseState;
   }
 
   return [
@@ -176,7 +182,9 @@ function mountWorkInProgressHook() {
   const hook: Hook = {
     memoizedState: null,
     updateQueue: null,
-    next: null
+    next: null,
+    baseQueue: null,
+    baseState: null
   };
 
   if (workInProgressHook === null) {
@@ -225,7 +233,9 @@ function updateWorkInProgressHook() {
   const newHook = {
     memoizedState: nextHook.memoizedState,
     updateQueue: nextHook.updateQueue,
-    next: null
+    next: null,
+    baseQueue: null,
+    baseState: null
   };
   if (workInProgressHook === null) {
     currentlyRenderingFiber.memoizedState = newHook;
