@@ -126,11 +126,29 @@ function updateState<S>(): [S, Dispatch<S>] {
 
   const pending = updateQueue.shared.pending;
 
+  const curHook = currentHook;
+  const { baseQueue: curHookBaseQueue } = curHook as Hook;
+
   updateQueue.shared.pending = null;
+
+  let combinedPending = pending;
   if (pending !== null) {
+    if (curHookBaseQueue !== null) {
+      const curHookBaseQueueFirst = curHookBaseQueue.next;
+      const pendingFirst = pending.next;
+
+      pending.next = curHookBaseQueueFirst;
+      curHookBaseQueue.next = pendingFirst;
+
+      (currentHook as Hook).baseQueue = combinedPending;
+    }
+  } else {
+    combinedPending = curHookBaseQueue;
+  }
+  if (combinedPending !== null) {
     const { memoizedState, baseQueue, baseState } = processUpdateQueue(
       oldState,
-      pending,
+      combinedPending,
       currentRenderLane
     );
     hook.memoizedState = memoizedState;
