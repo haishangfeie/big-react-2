@@ -1,29 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { createRoot } from 'react-noop-renderer';
+import { createRoot } from 'react-dom/client';
 
 function App() {
-  const [num, updateNum] = useState(0);
+  const [num, updateNum] = useState(100);
   useEffect(() => {
     console.log('App mount');
     updateNum((num) => num + 1);
   }, []);
   return (
-    <div>
-      <Child />
-    </div>
+    <ul
+      onClick={() => {
+        updateNum(50);
+      }}
+    >
+      {Array(num)
+        .fill(0)
+        .map((_, index) => {
+          return <Child>{index}</Child>;
+        })}
+    </ul>
   );
 }
 
-function Child() {
-  return `I'm child`;
+function Child({ children }: { children: any }) {
+  const now = performance.now();
+  while (performance.now() - now < 4) {}
+  return <li>{children}</li>;
 }
 
-const root = createRoot();
+const root = createRoot(document.querySelector('#root') as Element);
 root.render(<App />);
-declare global {
-  interface Window {
-    root?: ReturnType<typeof createRoot>;
-  }
-}
-
-window.root = root;
