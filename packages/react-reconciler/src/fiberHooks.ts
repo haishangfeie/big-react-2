@@ -127,13 +127,16 @@ function updateState<S>(): [S, Dispatch<S>] {
   const pending = updateQueue.shared.pending;
 
   const curHook = currentHook;
-  const { baseQueue: curHookBaseQueue } = curHook as Hook;
+  const { baseQueue: curHookBaseQueue, baseState: curHookBaseState } =
+    curHook as Hook;
 
   updateQueue.shared.pending = null;
 
   let combinedPending = pending;
+  let combineState = oldState;
   if (pending !== null) {
     if (curHookBaseQueue !== null) {
+      combineState = curHookBaseState;
       const curHookBaseQueueFirst = curHookBaseQueue.next;
       const pendingFirst = pending.next;
 
@@ -144,16 +147,20 @@ function updateState<S>(): [S, Dispatch<S>] {
     }
   } else {
     combinedPending = curHookBaseQueue;
+    combineState = curHookBaseState;
   }
   if (combinedPending !== null) {
     const { memoizedState, baseQueue, baseState } = processUpdateQueue(
-      oldState,
+      combineState,
       combinedPending,
       currentRenderLane
     );
     hook.memoizedState = memoizedState;
     hook.baseQueue = baseQueue;
     hook.baseState = baseState;
+
+    (curHook as Hook).baseQueue = baseQueue;
+    (curHook as Hook).baseState = baseState;
   }
 
   return [
