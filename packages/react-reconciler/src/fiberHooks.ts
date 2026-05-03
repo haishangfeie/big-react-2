@@ -102,6 +102,7 @@ function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
     memoizedState = initialState;
   }
   hook.memoizedState = memoizedState;
+  hook.baseState = memoizedState;
 
   const updateQueue = createUpdateQueue<S>();
   hook.updateQueue = updateQueue;
@@ -121,7 +122,7 @@ function updateState<S>(): [S, Dispatch<S>] {
   }
   const hook = updateWorkInProgressHook();
 
-  const { memoizedState: oldState } = hook;
+  const { baseState } = hook;
   const updateQueue = hook.updateQueue as UpdateQueue<S>;
 
   const pending = updateQueue.shared.pending;
@@ -133,7 +134,7 @@ function updateState<S>(): [S, Dispatch<S>] {
   updateQueue.shared.pending = null;
 
   let combinedPending = pending;
-  let combineState = oldState;
+  let combineState = baseState;
   if (pending !== null) {
     if (curHookBaseQueue !== null) {
       combineState = curHookBaseState;
@@ -259,8 +260,8 @@ function updateWorkInProgressHook() {
     memoizedState: nextHook.memoizedState,
     updateQueue: nextHook.updateQueue,
     next: null,
-    baseQueue: null,
-    baseState: null
+    baseQueue: nextHook.baseQueue,
+    baseState: nextHook.baseState
   };
   if (workInProgressHook === null) {
     currentlyRenderingFiber.memoizedState = newHook;
