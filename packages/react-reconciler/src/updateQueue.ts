@@ -65,17 +65,32 @@ export const processUpdateQueue = <State>(
   let newState = baseState;
   let newBaseState = baseState;
   let newBaseQueue: Update<State> | null = null;
-
-  if (pendingUpdate !== null) {
-    const first = pendingUpdate.next;
-    let pending = first;
-    if (pending !== null) {
-      let newBaseQueueFirst: Update<State> | null = null;
-      let newBaseQueueLast: Update<State> | null = null;
-      do {
-        const action = pending.action;
-        const lane = pending.lane;
-        /* 
+  if (pendingUpdate === null) {
+    return {
+      memoizedState: newState,
+      baseState: newBaseState,
+      baseQueue: newBaseQueue
+    };
+  }
+  const first = pendingUpdate.next;
+  if (first === null) {
+    console.error(
+      'processUpdateQueue: pendingUpdate.next 为 null，期望闭环链表'
+    );
+    return {
+      memoizedState: newState,
+      baseState: newBaseState,
+      baseQueue: newBaseQueue
+    };
+  }
+  let pending = first;
+  if (pending !== null) {
+    let newBaseQueueFirst: Update<State> | null = null;
+    let newBaseQueueLast: Update<State> | null = null;
+    do {
+      const action = pending.action;
+      const lane = pending.lane;
+      /* 
           更新要比较优先级，由isSubsetOfLanes控制Update是否跳过，
           如果跳过：
             判断是否是第一个跳过的Update
@@ -89,49 +104,48 @@ export const processUpdateQueue = <State>(
             如果已经有跳过的Update
               Update的优先级调整为NoLane，存入newBaseQueue里
         */
-        // 更新要被跳过
-        if (!isSubsetOfLanes(renderLane, lane)) {
-          // 是否是第一个被跳过的
-          const cloneUpdate = createUpdate(action, lane);
-          if (newBaseQueueLast === null) {
-            newBaseState = newState;
-            newBaseQueueFirst = cloneUpdate;
-            newBaseQueueLast = cloneUpdate;
-          } else {
-            newBaseQueueLast.next = cloneUpdate;
-            newBaseQueueLast = cloneUpdate;
-          }
-          pending = pending.next as Update<State>;
-          continue;
-        }
-        if (action instanceof Function) {
-          newState = action(newState);
+      // 更新要被跳过
+      if (!isSubsetOfLanes(renderLane, lane)) {
+        // 是否是第一个被跳过的
+        const cloneUpdate = createUpdate(action, lane);
+        if (newBaseQueueLast === null) {
+          newBaseState = newState;
+          newBaseQueueFirst = cloneUpdate;
+          newBaseQueueLast = cloneUpdate;
         } else {
-          newState = action;
-        }
-        if (newBaseQueueLast !== null) {
-          const cloneUpdate = createUpdate(action, NoLane);
           newBaseQueueLast.next = cloneUpdate;
           newBaseQueueLast = cloneUpdate;
         }
-        // 使用 Update<any> 是为了避免类型系统在闭环链表遍历中强制要求每个 update 的 State 类型一致。
-        // 实际上，整个队列通常是针对某个组件的状态类型，但 TypeScript 无法在链表结构中精确推断。
-        // 因此这里使用 any 是一种类型擦除的策略，以保证遍历逻辑的通用性
-        pending = pending.next as Update<any>;
-      } while (pending !== first);
-
-      if (newBaseQueueLast) {
-        // 构成闭环链表
-        newBaseQueueLast.next = newBaseQueueFirst;
-        newBaseQueue = newBaseQueueLast;
-      } else {
-        // 本次计算没有更新被跳过
-        newBaseState = newState;
+        pending = pending.next as Update<State>;
+        continue;
       }
+      if (action instanceof Function) {
+        newState = action(newState);
+      } else {
+        newState = action;
+      }
+      if (newBaseQueueLast !== null) {
+        const cloneUpdate = createUpdate(action, NoLane);
+        newBaseQueueLast.next = cloneUpdate;
+        newBaseQueueLast = cloneUpdate;
+      }
+      // 使用 Update<any> 是为了避免类型系统在闭环链表遍历中强制要求每个 update 的 State 类型一致。
+      // 实际上，整个队列通常是针对某个组件的状态类型，但 TypeScript 无法在链表结构中精确推断。
+      // 因此这里使用 any 是一种类型擦除的策略，以保证遍历逻辑的通用性
+      pending = pending.next as Update<any>;
+    } while (pending !== first);
+
+    if (newBaseQueueLast) {
+      // 构成闭环链表
+      newBaseQueueLast.next = newBaseQueueFirst;
+      newBaseQueue = newBaseQueueLast;
     } else {
-      // 因为pendingUpdate存在是，应该是闭环链表
-      console.error('currentUpdate不应该是null');
+      // 本次计算没有更新被跳过
+      newBaseState = newState;
     }
+  } else {
+    // 因为pendingUpdate存在是，应该是闭环链表
+    console.error('currentUpdate不应该是null');
   }
 
   return {

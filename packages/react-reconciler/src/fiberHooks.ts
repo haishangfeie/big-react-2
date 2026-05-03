@@ -135,13 +135,14 @@ function updateState<S>(): [S, Dispatch<S>] {
 
   let combinedPending = pending;
   let combineState = baseState;
-  if (pending !== null) {
+  if (combinedPending !== null) {
     if (curHookBaseQueue !== null) {
       combineState = curHookBaseState;
+      // 两个闭环链表合并
       const curHookBaseQueueFirst = curHookBaseQueue.next;
-      const pendingFirst = pending.next;
+      const pendingFirst = combinedPending.next;
 
-      pending.next = curHookBaseQueueFirst;
+      combinedPending.next = curHookBaseQueueFirst;
       curHookBaseQueue.next = pendingFirst;
 
       (currentHook as Hook).baseQueue = combinedPending;
