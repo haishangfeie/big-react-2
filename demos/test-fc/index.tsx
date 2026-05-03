@@ -16,7 +16,7 @@ function App() {
       {Array(num)
         .fill(0)
         .map((_, index) => {
-          return <Child>{index}</Child>;
+          return <Child key={index}>{index}</Child>;
         })}
     </ul>
   );

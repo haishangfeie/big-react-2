@@ -124,6 +124,9 @@ export const processUpdateQueue = <State>(
         // 构成闭环链表
         newBaseQueueLast.next = newBaseQueueFirst;
         newBaseQueue = newBaseQueueLast;
+      } else {
+        // 本次计算没有更新被跳过
+        newBaseState = newState;
       }
     } else {
       // 因为pendingUpdate存在是，应该是闭环链表
