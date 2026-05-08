@@ -81,12 +81,14 @@ export function renderWidthHooks(wip: FiberNode, renderLane: Lane) {
 
 const HooksDispatcherOnMount: Dispatcher = {
   useState: mountState,
-  useEffect: mountEffect
+  useEffect: mountEffect,
+  useTransition: mountTransition
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   useState: updateState,
-  useEffect: updateEffect
+  useEffect: updateEffect,
+  useTransition: updateTransition
 };
 
 function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
@@ -373,4 +375,37 @@ function areHookInputsEqual(nextDeps: EffectDeps, prevDeps: EffectDeps) {
     return false;
   }
   return true;
+}
+
+function mountTransition(): [
+  isPending: boolean,
+  startTransition: (cb: () => void) => void
+] {
+  const [isPending, setIsPending] = mountState(false);
+  const hook = mountWorkInProgressHook();
+  const startTransition = startTransitionFn.bind(null, setIsPending);
+  hook.memoizedState = startTransition;
+
+  return [isPending, startTransition];
+}
+
+function startTransitionFn(
+  setIsPending: Dispatch<boolean>,
+  cb: () => void
+): void {
+  setIsPending(true);
+  const prevTransition = internals.ReactCurrentBatchConfig.transition;
+  internals.ReactCurrentBatchConfig.transition = 1;
+  cb();
+  setIsPending(false);
+  internals.ReactCurrentBatchConfig.transition = prevTransition;
+}
+
+function updateTransition(): [
+  isPending: boolean,
+  startTransition: (cb: () => void) => void
+] {
+  const [isPending] = updateState<boolean>();
+  const hook = updateWorkInProgressHook();
+  return [isPending, hook.memoizedState];
 }

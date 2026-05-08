@@ -6,6 +6,7 @@ export interface Dispatcher {
     create: () => void | (() => void),
     deps: any[] | null | void
   ) => void;
+  useTransition: () => [boolean, (cb: () => void) => void];
 }
 
 export type Dispatch<S> = (action: Action<S>) => void;

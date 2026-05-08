@@ -22,7 +22,7 @@ import {
 import {
   getHighestPriorityLane,
   Lane,
-  lanesToSchedulerPriority,
+  laneToSchedulerPriority,
   markRootFinished,
   mergeLanes,
   NoLane,
@@ -89,7 +89,7 @@ function ensureRootIsScheduled(root: FiberRootNode) {
     scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
   } else {
     // 其他优先级使用宏任务
-    const schedulerPriority = lanesToSchedulerPriority(lane);
+    const schedulerPriority = laneToSchedulerPriority(lane);
     root.callbackNode = scheduleCallback(
       schedulerPriority,
       performConCurrentWorkOnRoot.bind(null, root)
