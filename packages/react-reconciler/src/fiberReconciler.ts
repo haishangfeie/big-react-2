@@ -1,3 +1,7 @@
+import {
+  unstable_runWithPriority,
+  unstable_ImmediatePriority
+} from 'scheduler';
 import { ReactElementType } from 'shared/ReactTypes';
 import { FiberNode, FiberRootNode } from './fiber';
 import { HostRoot } from './workTags';
@@ -22,12 +26,15 @@ export const updateContainer = (
   element: ReactElementType | null,
   root: FiberRootNode
 ) => {
-  const hostRootFiber = root.current;
-  const lane = requestUpdateLane();
-  enqueueUpdate(
-    hostRootFiber.updateQueue as UpdateQueue<ReactElementType | null>,
-    createUpdate(element, lane)
-  );
-  scheduleUpdateOnFiber(hostRootFiber, lane);
+  unstable_runWithPriority(unstable_ImmediatePriority, () => {
+    const hostRootFiber = root.current;
+    const lane = requestUpdateLane();
+    enqueueUpdate(
+      hostRootFiber.updateQueue as UpdateQueue<ReactElementType | null>,
+      createUpdate(element, lane)
+    );
+    scheduleUpdateOnFiber(hostRootFiber, lane);
+  });
+
   return element;
 };
