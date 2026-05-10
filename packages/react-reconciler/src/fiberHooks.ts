@@ -394,11 +394,11 @@ function startTransitionFn(
   cb: () => void
 ): void {
   setIsPending(true);
-  const prevTransition = internals.ReactCurrentBatchConfig.transition;
-  internals.ReactCurrentBatchConfig.transition = 1;
+  const prevTransition = internals.currentBatchConfig.transition;
+  internals.currentBatchConfig.transition = 1;
   cb();
   setIsPending(false);
-  internals.ReactCurrentBatchConfig.transition = prevTransition;
+  internals.currentBatchConfig.transition = prevTransition;
 }
 
 function updateTransition(): [

@@ -4,7 +4,7 @@ import currentDispatcher, {
   resolveDispatcher,
   Dispatcher
 } from './src/currentDispatcher';
-import ReactCurrentBatchConfig from './src/currentBatchConfig';
+import currentBatchConfig from './src/currentBatchConfig';
 
 export { isValidElement } from './src/jsx';
 
@@ -25,7 +25,7 @@ export const useTransition: Dispatcher['useTransition'] = () => {
 
 export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED__ = {
   currentDispatcher,
-  ReactCurrentBatchConfig
+  currentBatchConfig
 };
 
 export const version = '0.0.0';

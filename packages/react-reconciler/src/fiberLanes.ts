@@ -25,7 +25,7 @@ export function mergeLanes(laneA: Lane, laneB: Lane): Lanes {
 }
 
 export function requestUpdateLane() {
-  const transition = internals.ReactCurrentBatchConfig.transition;
+  const transition = internals.currentBatchConfig.transition;
 
   if (transition === 1) {
     return TransitionLane;
