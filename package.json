@@ -8,7 +8,8 @@
     "prepare": "husky",
     "lint": "eslint --fix --quiet",
     "build:dev": "rimraf dist && rollup --config scripts/rollup/dev.config.js",
-    "demos:test-fc": "vite ./demos/test-fc -c scripts/vite/vite.config.js --force"
+    "demos:test-fc": "vite ./demos/test-fc -c scripts/vite/vite.config.js --force",
+    "demos:transition": "vite serve demos/transition --config scripts/vite/vite.config.js --force"
   },
   "keywords": [],
   "author": "",

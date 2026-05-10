@@ -185,6 +185,8 @@ function getHostSibling(fiber: FiberNode) {
       if (node.tag === HostComponent || node.tag === HostText) {
         if ((node.flags & Placement) === NoFlags) {
           return node;
+        } else {
+          continue findSibling;
         }
       }
       const child: FiberNode | null = node.child;
@@ -202,6 +204,9 @@ function getHostSibling(fiber: FiberNode) {
 
 const commitDeletion = (childToDelete: FiberNode, root: FiberRootNode) => {
   let rootHostNode: FiberNode | null = null;
+  /* 
+    思考这个方法要做的事情是什么？
+  */
   commitNestedComponent(childToDelete, (fiber) => {
     switch (fiber.tag) {
       case HostComponent:
@@ -249,6 +254,9 @@ function recordHostChildrenToDelete(
   unmountFirstFiber: FiberNode
 ): FiberNode[] {
   const childrenToDelete = [unmountFirstFiber];
+  if (childToDelete === unmountFirstFiber) {
+    return childrenToDelete;
+  }
 
   let node = unmountFirstFiber;
 
@@ -327,6 +335,7 @@ const insertOrAppendPlacementNodeIntoContainer = (
   if (finishedWork.tag === HostComponent || finishedWork.tag === HostText) {
     if (before) {
       insertChildToContainer(finishedWork.stateNode, hostParent, before);
+      return;
     }
     appendChildToContainer(hostParent, finishedWork.stateNode);
     return;
