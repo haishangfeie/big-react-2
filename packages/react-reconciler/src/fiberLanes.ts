@@ -25,9 +25,9 @@ export function mergeLanes(laneA: Lane, laneB: Lane): Lanes {
 }
 
 export function requestUpdateLane() {
-  const transition = internals.currentBatchConfig.transition;
+  const isTransition = internals.currentBatchConfig.transition !== null;
 
-  if (transition === 1) {
+  if (isTransition) {
     return TransitionLane;
   }
   const priority = unstable_getCurrentPriorityLevel();
