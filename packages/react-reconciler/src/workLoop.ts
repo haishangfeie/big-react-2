@@ -215,23 +215,6 @@ function commitRoot(root: FiberRootNode) {
   root.finishedLane = NoLane;
   markRootFinished(root, lane);
 
-  const rootNeedScheduleEffect = (finishedWork.flags & PassiveMask) !== NoFlags;
-  const subtreeNeedScheduleEffect =
-    (finishedWork.subtreeFlags & PassiveMask) !== NoFlags;
-  if (rootNeedScheduleEffect || subtreeNeedScheduleEffect) {
-    // 调度effect
-    if (!rootDoesHasPassiveEffect) {
-      rootDoesHasPassiveEffect = true;
-      scheduleCallback(NormalPriority, () => {
-        // 执行effect回调
-        flushPassiveEffects(root.pendingPassiveEffects);
-        rootDoesHasPassiveEffect = false;
-        console.log('同步执行');
-        flushSyncCallback();
-      });
-    }
-  }
-
   // 判断是否要执行3个子阶段
   // TODO: 当前仅判断mutation
   const rootHasMutation = (finishedWork.flags & MutationMask) !== NoFlags;
@@ -255,6 +238,23 @@ function commitRoot(root: FiberRootNode) {
     // layout
   } else {
     root.current = finishedWork;
+  }
+
+  const rootNeedScheduleEffect = (finishedWork.flags & PassiveMask) !== NoFlags;
+  const subtreeNeedScheduleEffect =
+    (finishedWork.subtreeFlags & PassiveMask) !== NoFlags;
+  if (rootNeedScheduleEffect || subtreeNeedScheduleEffect) {
+    // 调度effect
+    if (!rootDoesHasPassiveEffect) {
+      rootDoesHasPassiveEffect = true;
+      scheduleCallback(NormalPriority, () => {
+        // 执行effect回调
+        flushPassiveEffects(root.pendingPassiveEffects);
+        rootDoesHasPassiveEffect = false;
+        console.log('同步执行');
+        flushSyncCallback();
+      });
+    }
   }
 
   ensureRootIsScheduled(root);
