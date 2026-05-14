@@ -82,13 +82,15 @@ export function renderWidthHooks(wip: FiberNode, renderLane: Lane) {
 const HooksDispatcherOnMount: Dispatcher = {
   useState: mountState,
   useEffect: mountEffect,
-  useTransition: mountTransition
+  useTransition: mountTransition,
+  useRef: mountRef
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   useState: updateState,
   useEffect: updateEffect,
-  useTransition: updateTransition
+  useTransition: updateTransition,
+  useRef: updateRef
 };
 
 function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
@@ -408,4 +410,22 @@ function updateTransition(): [
   const [isPending] = updateState<boolean>();
   const hook = updateWorkInProgressHook();
   return [isPending, hook.memoizedState];
+}
+
+function mountRef<S>(initialValue: S): {
+  current: S;
+} {
+  const obj = {
+    current: initialValue
+  };
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = obj;
+  return obj;
+}
+
+function updateRef<S>(): {
+  current: S;
+} {
+  const hook = updateWorkInProgressHook();
+  return hook.memoizedState;
 }
