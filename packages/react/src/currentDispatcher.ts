@@ -7,6 +7,7 @@ export interface Dispatcher {
     deps: any[] | null | void
   ) => void;
   useTransition: () => [boolean, (cb: () => void) => void];
+  useRef: <S>(initialValue: S) => { current: S };
 }
 
 export type Dispatch<S> = (action: Action<S>) => void;
