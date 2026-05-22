@@ -11,6 +11,7 @@ import {
 import { reconcileChildFibers, mountChildFibers } from './childFiber';
 import { renderWidthHooks } from './fiberHooks';
 import { Lane } from './fiberLanes';
+import { Ref } from './fiberFlags';
 
 export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   switch (wip.tag) {
@@ -51,7 +52,26 @@ function updateHostComponent(wip: FiberNode) {
   const pendingProps = wip.pendingProps;
   const children = pendingProps.children;
   reconcileChildren(wip, children);
+  markRef(wip.alternate, wip);
   return wip.child;
+}
+
+function markRef(current: FiberNode | null, workInProgress: FiberNode) {
+  if (current === null) {
+    if (workInProgress.ref) {
+      workInProgress.flags |= Ref;
+    }
+  } else {
+    if (workInProgress.ref) {
+      if (
+        current.key !== workInProgress.key ||
+        current.type !== workInProgress.type ||
+        current.ref !== workInProgress.ref
+      ) {
+        workInProgress.flags |= Ref;
+      }
+    }
+  }
 }
 
 function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
