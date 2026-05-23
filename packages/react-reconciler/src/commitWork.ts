@@ -92,6 +92,7 @@ const commitMutationEffectsOnFiber = (
   }
 
   if ((flags & Ref) !== NoFlags) {
+    console.log('mutation 解绑旧ref', finishedWork);
     safelyDetachRef(finishedWork);
   }
 };
@@ -218,6 +219,9 @@ const commitDeletion = (childToDelete: FiberNode, root: FiberRootNode) => {
   commitNestedComponent(childToDelete, (fiber) => {
     switch (fiber.tag) {
       case HostComponent:
+        if (fiber.ref) {
+          console.log('卸载前解绑ref', fiber);
+        }
         safelyDetachRef(fiber);
         if (rootHostNode === null) {
           rootHostNode = fiber;

@@ -17,7 +17,7 @@ const ReactElement = (
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type,
-    key,
+    key: key || null,
     ref,
     props,
     __mark: 'big-react-2'
@@ -28,7 +28,7 @@ export const jsx = (type: ElementType, config: any, ...maybeChildren: any) => {
   let key: Key = null;
   const props: Props = {};
   let ref: Ref = null;
-
+  console.log('jsx', type, config, maybeChildren);
   for (const prop in config || {}) {
     const val = config[prop];
     if (prop === 'key') {
@@ -60,11 +60,10 @@ export const jsx = (type: ElementType, config: any, ...maybeChildren: any) => {
   return ReactElement(type, key, ref, props);
 };
 
-export const jsxDEV = (type: ElementType, config: any) => {
+export const jsxDEV = (type: ElementType, config: any, keyValue: Key) => {
   let key: Key = null;
   const props: Props = {};
   let ref: Ref = null;
-
   for (const prop in config || {}) {
     const val = config[prop];
     if (prop === 'key') {
@@ -83,6 +82,10 @@ export const jsxDEV = (type: ElementType, config: any) => {
     if ({}.hasOwnProperty.call(config, prop)) {
       props[prop] = val;
     }
+  }
+  if (!key) {
+    key = keyValue;
+    console.log('设置keyValue', keyValue);
   }
 
   return ReactElement(type, key, ref, props);

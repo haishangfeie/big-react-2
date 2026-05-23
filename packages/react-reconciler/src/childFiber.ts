@@ -235,7 +235,9 @@ function updateFromMap(
   // 为什么这里要考虑element.key 为 undefined?
   // 1. element 可能是数组；2.element可能是数字和字符串；这两种情况element.key就是undefined
   const keyToUse =
-    element.key !== null && element.key !== void 0 ? element.key : index;
+    element && element.key !== null && element.key !== void 0
+      ? element.key
+      : index;
   const beforeFiber = existingChildren.get(keyToUse);
   if (typeof element === 'string' || typeof element === 'number') {
     if (beforeFiber) {
