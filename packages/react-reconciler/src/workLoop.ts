@@ -17,7 +17,8 @@ import {
   commitHookEffectListCreate,
   commitHookEffectListDestroy,
   commitHookEffectListUnmount,
-  commitMutationEffects
+  commitMutationEffects,
+  commitLayoutEffect
 } from './commitWork';
 import {
   getHighestPriorityLane,
@@ -229,13 +230,13 @@ function commitRoot(root: FiberRootNode) {
     rootHasEffect ||
     subtreeHasEffect
   ) {
-    // TODO
     // mutation
     commitMutationEffects(finishedWork, root);
 
     // 在mutation结束，layout开始前切换fiber树
     root.current = finishedWork;
     // layout
+    commitLayoutEffect(finishedWork, root);
   } else {
     root.current = finishedWork;
   }

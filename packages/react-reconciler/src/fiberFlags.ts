@@ -8,6 +8,7 @@ export const PassiveEffect = /**/ 0b0001000;
 export const Ref = /*          */ 0b0010000;
 
 export const MutationMask = Placement | Update | ChildDeletion | Ref;
+export const layoutMask = Ref;
 
 // 该掩码用于统一处理副作用和子节点清理逻辑
 // PassiveEffectMask = PassiveEffect | ChildDeletion 是为了确保：

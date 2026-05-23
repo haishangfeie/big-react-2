@@ -4,7 +4,8 @@ export type Ref =
   | {
       current: any;
     }
-  | ((initialValue: any) => void);
+  | ((initialValue: any) => void)
+  | null;
 export type Props = any;
 export type ElementType = any;
 

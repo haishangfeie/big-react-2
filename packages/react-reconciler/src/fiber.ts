@@ -117,6 +117,7 @@ export const createWorkInProgress = (
     wip.deletions = null;
   }
   wip.type = current.type;
+  wip.ref = pendingProps.ref || null;
   wip.updateQueue = current.updateQueue;
   wip.child = current.child;
   wip.memoizedState = current.memoizedState;
@@ -134,6 +135,7 @@ export function createFiberFromElement(element: ReactElementType) {
   }
   const fiber = new FiberNode(tag, props, key);
   fiber.type = element.type;
+  fiber.ref = element.ref;
   return fiber;
 }
 
