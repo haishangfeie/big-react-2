@@ -29,11 +29,7 @@ export function completeWork(wip: FiberNode) {
         // !!! 注意这里简化了实现，直接标记了Update。正常的流程是在这里比较props的各个属性的变化，
         // 标记Update，并且可以将变化存入fiber的updateQueue，例如以数组的形式存储 n表示变化的字段,n+1表示变化后的值
         markUpdate(wip);
-        if (
-          wip.ref !== current.ref ||
-          wip.key !== current.key ||
-          wip.type !== current.type
-        ) {
+        if (wip.ref !== current.ref) {
           markRef(wip);
         }
       } else {

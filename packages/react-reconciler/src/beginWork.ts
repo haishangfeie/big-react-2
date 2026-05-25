@@ -62,11 +62,7 @@ function markRef(current: FiberNode | null, workInProgress: FiberNode) {
       workInProgress.flags |= Ref;
     }
   } else {
-    if (
-      current.key !== workInProgress.key ||
-      current.type !== workInProgress.type ||
-      current.ref !== workInProgress.ref
-    ) {
+    if (current.ref !== workInProgress.ref) {
       workInProgress.flags |= Ref;
     }
   }
