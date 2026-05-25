@@ -135,7 +135,7 @@ export function createFiberFromElement(element: ReactElementType) {
   }
   const fiber = new FiberNode(tag, props, key);
   fiber.type = element.type;
-  fiber.ref = element.ref;
+  fiber.ref = element.ref || null;
   return fiber;
 }
 
