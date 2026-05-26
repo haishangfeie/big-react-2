@@ -39,6 +39,14 @@ import {
 import { Effect } from './fiberHooks';
 import { HookHasEffect, Passive } from './hookEffectTags';
 
+type ExecutionContext = number;
+
+export const NoContext = /*  */ 0b0000;
+const RenderContext = /*     */ 0b0010;
+const CommitContext = /*     */ 0b0100;
+
+let executionContext: ExecutionContext = NoContext;
+
 type RootExitStatus = number;
 const RootInComplete = 1; // 中断
 const RootCompleted = 2; // 完成
@@ -196,6 +204,8 @@ function completeUnitOfWork(fiber: FiberNode) {
 }
 
 function commitRoot(root: FiberRootNode) {
+  const prevExecutionContext = executionContext;
+  executionContext |= CommitContext;
   const finishedWork = root.finishedWork;
 
   if (finishedWork === null) {
@@ -241,6 +251,8 @@ function commitRoot(root: FiberRootNode) {
     root.current = finishedWork;
   }
 
+  executionContext = prevExecutionContext;
+
   const rootNeedScheduleEffect = (finishedWork.flags & PassiveMask) !== NoFlags;
   const subtreeNeedScheduleEffect =
     (finishedWork.subtreeFlags & PassiveMask) !== NoFlags;
@@ -262,6 +274,9 @@ function commitRoot(root: FiberRootNode) {
 }
 
 function flushPassiveEffects(pendingPassiveEffects: PendingPassiveEffects) {
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+    console.error('render阶段和commit阶段时不允许执行useEffect回调');
+  }
   // 先执行组件卸载
   // 再执行上一轮destroy
   // 最后执行本次create
@@ -283,6 +298,9 @@ function performConCurrentWorkOnRoot(
   root: FiberRootNode,
   didTimeout: boolean
 ): any {
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+    console.error('render阶段和commit阶段时不允许触发新的调度');
+  }
   if (__DEV__) {
     console.log('执行performConCurrentWorkOnRoot方法');
   }
@@ -337,6 +355,8 @@ function renderRoot(
   if (__DEV__) {
     console.log(`render阶段进行${shouldTimeSlice ? '并发' : '同步'}更新`);
   }
+  const prevExecutionContext = executionContext;
+  executionContext |= RenderContext;
   if (wipRootRenderLane !== lane) {
     // 初始化
     prepareFreshStack(root, lane);
@@ -367,6 +387,8 @@ function renderRoot(
     }
     // eslint-disable-next-line no-constant-condition
   } while (true);
+
+  executionContext = prevExecutionContext;
 
   // 中断或者完成
   if (shouldTimeSlice && workInProgress !== null) {
