@@ -10,9 +10,11 @@ import {
   FunctionComponent,
   HostComponent,
   HostRoot,
-  HostText
+  HostText,
+  ContextProvider
 } from './workTags';
 import { NoFlags, Ref, Update } from './fiberFlags';
+import { popProvider } from './fiberContext';
 
 const markUpdate = (fiber: FiberNode) => {
   fiber.flags |= Update;
@@ -61,6 +63,13 @@ export function completeWork(wip: FiberNode) {
     case Fragment:
       bubbleProperties(wip);
       return null;
+    case ContextProvider: {
+      const Provider = wip.type;
+      const context = Provider._context;
+      popProvider(context);
+      bubbleProperties(wip);
+      return null;
+    }
     default:
       console.warn(`未处理的completeWork类型${wip.tag}`, wip);
       return null;

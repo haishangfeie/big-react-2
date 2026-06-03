@@ -9,7 +9,7 @@ import {
   Update,
   UpdateQueue
 } from './updateQueue';
-import { Action } from 'shared/ReactTypes';
+import { Action, ReactContext } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
 import { EffectTag, HookHasEffect, Passive } from './hookEffectTags';
@@ -83,14 +83,16 @@ const HooksDispatcherOnMount: Dispatcher = {
   useState: mountState,
   useEffect: mountEffect,
   useTransition: mountTransition,
-  useRef: mountRef
+  useRef: mountRef,
+  useContext: readContext
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   useState: updateState,
   useEffect: updateEffect,
   useTransition: updateTransition,
-  useRef: updateRef
+  useRef: updateRef,
+  useContext: readContext
 };
 
 function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
@@ -428,4 +430,12 @@ function updateRef<S>(): {
 } {
   const hook = updateWorkInProgressHook();
   return hook.memoizedState;
+}
+
+function readContext<T>(context: ReactContext<T>) {
+  if (currentlyRenderingFiber === null) {
+    throw new Error('useContext只能在函数组件中使用');
+  }
+  const value = context._currentValue;
+  return value;
 }
