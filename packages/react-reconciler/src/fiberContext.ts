@@ -9,6 +9,10 @@ export function pushProvider<T>(context: ReactContext<T>, newValue: T) {
 }
 
 export function popProvider<T>(context: ReactContext<T>) {
-  prevContextValue = contextValueStack.pop();
-  context._currentValue = prevContextValue as T;
+  if (contextValueStack.length) {
+    prevContextValue = contextValueStack.pop();
+    context._currentValue = prevContextValue as T;
+  } else {
+    console.error('Context pop 出错: push/pop 不匹配', context);
+  }
 }
