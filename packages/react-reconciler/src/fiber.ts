@@ -4,11 +4,16 @@ import {
   FunctionComponent,
   HostComponent,
   WorkType,
-  ContextProvider
+  ContextProvider,
+  OffscreenComponent
 } from './workTags';
 import { NoFlags, Flags } from './fiberFlags';
 import { Container } from 'hostConfig';
-import { REACT_FRAGMENT_TYPE, REACT_PROVIDER_TYPE } from 'shared/ReactSymbols';
+import {
+  REACT_FRAGMENT_TYPE,
+  REACT_PROVIDER_TYPE,
+  REACT_SUSPENSE_TYPE
+} from 'shared/ReactSymbols';
 import { Lane, Lanes, NoLane, NoLanes } from './fiberLanes';
 import { Effect } from './fiberHooks';
 import { CallbackNode } from 'scheduler';
@@ -19,6 +24,12 @@ export interface PendingPassiveEffects {
   // 收集卸载时要执行的回调
   unmount: Effect[];
 }
+
+export interface OffscreenProps {
+  mode: 'visible' | 'hidden';
+  children: any;
+}
+
 export class FiberNode {
   tag: WorkType;
   key: Key;
@@ -149,5 +160,11 @@ export function createFiberFromElement(element: ReactElementType) {
 export function createFiberFromFragment(elements: any[], key: Key) {
   const fiber = new FiberNode(Fragment, elements, key);
   fiber.type = REACT_FRAGMENT_TYPE;
+  return fiber;
+}
+
+export function createFiberFromOffscreen(pendingProps: OffscreenProps) {
+  const fiber = new FiberNode(OffscreenComponent, pendingProps, null);
+  fiber.type = REACT_SUSPENSE_TYPE;
   return fiber;
 }
