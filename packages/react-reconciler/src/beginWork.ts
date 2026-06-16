@@ -126,7 +126,7 @@ function updateSuspenseComponent(wip: FiberNode) {
         fallbackChildren
       );
     } else {
-      // 已解决
+      // 已解决(正常流程)
       return mountSuspensePrimaryChildren(wip, primaryChildren);
     }
   } else {
@@ -139,7 +139,7 @@ function updateSuspenseComponent(wip: FiberNode) {
         fallbackChildren
       );
     } else {
-      // 已解决
+      // 已解决(正常流程)
       return updateSuspensePrimaryChildren(wip, primaryChildren);
     }
   }
@@ -176,6 +176,7 @@ function mountSuspensePrimaryChildren(
   };
   const primaryChildFragment = createFiberFromOffscreen(offscreenProps);
   primaryChildFragment.return = workInProgress;
+  primaryChildFragment.sibling = null;
   workInProgress.child = primaryChildFragment;
 
   return primaryChildFragment;
@@ -249,6 +250,7 @@ function updateSuspensePrimaryChildren(
   }
 
   primaryChildFragment.return = workInProgress;
+  primaryChildFragment.sibling = null;
   workInProgress.child = primaryChildFragment;
 
   return primaryChildFragment;

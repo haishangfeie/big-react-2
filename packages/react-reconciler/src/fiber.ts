@@ -5,7 +5,8 @@ import {
   HostComponent,
   WorkType,
   ContextProvider,
-  OffscreenComponent
+  OffscreenComponent,
+  SuspenseComponent
 } from './workTags';
 import { NoFlags, Flags } from './fiberFlags';
 import { Container } from 'hostConfig';
@@ -148,6 +149,8 @@ export function createFiberFromElement(element: ReactElementType) {
     type.$$typeof === REACT_PROVIDER_TYPE
   ) {
     tag = ContextProvider;
+  } else if (type === REACT_SUSPENSE_TYPE) {
+    tag = SuspenseComponent;
   } else if (typeof type !== 'function' && __DEV__) {
     console.warn(`createFiberFromElement未处理类型`, element);
   }
