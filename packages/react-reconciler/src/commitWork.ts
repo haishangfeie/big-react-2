@@ -79,18 +79,19 @@ const commitMutationEffectsOnFiber = (
 
 function hideOrUnhideAllChildren(finishedWork: FiberNode, isHidden: boolean) {
   findHostSubtreeRoot(finishedWork, (hostSubtreeRoot) => {
+    const instance = hostSubtreeRoot.stateNode;
     if (hostSubtreeRoot.tag === HostComponent) {
       if (isHidden) {
-        hideInstance(hostSubtreeRoot);
+        hideInstance(instance);
       } else {
-        unhideInstance(hostSubtreeRoot);
+        unhideInstance(instance);
       }
     } else if (hostSubtreeRoot.tag === HostText) {
       if (isHidden) {
-        hideTextInstance(hostSubtreeRoot);
+        hideTextInstance(instance);
       } else {
-        const text = hostSubtreeRoot.pendingProps.content;
-        unhideTextInstance(hostSubtreeRoot, text);
+        const text = hostSubtreeRoot.memoizedProps.content;
+        unhideTextInstance(instance, text);
       }
     }
   });
@@ -113,7 +114,11 @@ function findHostSubtreeRoot(
       if (!hostSubtreeRoot) {
         callback(node);
       }
-    } else if (node.tag === OffscreenComponent) {
+    } else if (
+      node.tag === OffscreenComponent &&
+      node.pendingProps.mode === 'hidden' &&
+      node !== finishedWork
+    ) {
       // 什么都不用做
     } else if (node.child) {
       node.child.return = node;
@@ -125,17 +130,21 @@ function findHostSubtreeRoot(
       return;
     }
 
-    if (node.sibling === null) {
+    while (node.sibling === null) {
       if (node.return === finishedWork || node.return === null) {
         return;
       }
-      hostSubtreeRoot = null;
+      if (hostSubtreeRoot === node) {
+        hostSubtreeRoot = null;
+      }
+
       node = node.return as FiberNode;
-    } else {
-      node.sibling.return = node;
-      node = node.sibling;
+    }
+    if (hostSubtreeRoot === node) {
       hostSubtreeRoot = null;
     }
+    node.sibling.return = node;
+    node = node.sibling;
   }
 }
 

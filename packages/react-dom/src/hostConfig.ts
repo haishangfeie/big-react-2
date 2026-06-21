@@ -3,8 +3,8 @@ import { HostComponent, HostText } from 'react-reconciler/src/workTags';
 import { updateFiberProps } from './SyntheticEvent';
 import { Props } from 'shared/ReactTypes';
 
-export type Container = HTMLElement;
-export type Instance = HTMLElement;
+export type Container = Element;
+export type Instance = Element;
 export type TextInstance = Text;
 
 export const createInstance = (type: string, props: Props) => {
@@ -80,7 +80,7 @@ export const scheduleMicroTask =
       : setTimeout;
 
 export function hideInstance(instance: Instance) {
-  const style = instance.style;
+  const style = (instance as HTMLElement).style;
   if (style.setProperty) {
     style.setProperty('display', 'node', 'important');
   } else {
@@ -90,7 +90,7 @@ export function hideInstance(instance: Instance) {
 
 export function unhideInstance(instance: Instance) {
   // 这里的实现简化了
-  const style = instance.style;
+  const style = (instance as HTMLElement).style;
   if (style.removeProperty) {
     style.removeProperty('display');
   } else {
