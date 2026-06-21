@@ -48,7 +48,7 @@ let currentHook: Hook | null = null;
 
 let currentRenderLane = NoLane;
 
-export function renderWidthHooks(wip: FiberNode, renderLane: Lane) {
+export function renderWithHooks(wip: FiberNode, renderLane: Lane) {
   // 设置当前的fiber
   currentlyRenderingFiber = wip;
   workInProgressHook = null;

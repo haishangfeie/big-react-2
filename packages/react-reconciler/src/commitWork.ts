@@ -4,7 +4,11 @@ import {
   Container,
   insertChildToContainer,
   Instance,
-  removeChild
+  removeChild,
+  hideInstance,
+  unhideInstance,
+  hideTextInstance,
+  unhideTextInstance
 } from 'hostConfig';
 import { FiberNode, FiberRootNode, PendingPassiveEffects } from './fiber';
 import {
@@ -16,13 +20,15 @@ import {
   PassiveEffect,
   Placement,
   Ref,
-  Update
+  Update,
+  Visibility
 } from './fiberFlags';
 import {
   FunctionComponent,
   HostComponent,
   HostRoot,
-  HostText
+  HostText,
+  OffscreenComponent
 } from './workTags';
 import { Effect, FCUpdateQueue } from './fiberHooks';
 import { EffectTag, HookHasEffect } from './hookEffectTags';
@@ -64,7 +70,74 @@ const commitMutationEffectsOnFiber = (
       safelyDetachRef(finishedWork);
     }
   }
+  if ((flags & Visibility) !== NoFlags && tag === OffscreenComponent) {
+    const isHidden = finishedWork.pendingProps.mode === 'hidden';
+    hideOrUnhideAllChildren(finishedWork, isHidden);
+    finishedWork.flags &= ~Visibility;
+  }
 };
+
+function hideOrUnhideAllChildren(finishedWork: FiberNode, isHidden: boolean) {
+  findHostSubtreeRoot(finishedWork, (hostSubtreeRoot) => {
+    if (hostSubtreeRoot.tag === HostComponent) {
+      if (isHidden) {
+        hideInstance(hostSubtreeRoot);
+      } else {
+        unhideInstance(hostSubtreeRoot);
+      }
+    } else if (hostSubtreeRoot.tag === HostText) {
+      if (isHidden) {
+        hideTextInstance(hostSubtreeRoot);
+      } else {
+        const text = hostSubtreeRoot.pendingProps.content;
+        unhideTextInstance(hostSubtreeRoot, text);
+      }
+    }
+  });
+}
+
+function findHostSubtreeRoot(
+  finishedWork: FiberNode,
+  callback: (hostSubtreeRoot: FiberNode) => void
+) {
+  let node = finishedWork;
+  let hostSubtreeRoot = null;
+  while (true) {
+    // 深度优先遍历
+    if (node.tag === HostComponent) {
+      if (!hostSubtreeRoot) {
+        hostSubtreeRoot = node;
+        callback(node);
+      }
+    } else if (node.tag === HostText) {
+      if (!hostSubtreeRoot) {
+        callback(node);
+      }
+    } else if (node.tag === OffscreenComponent) {
+      // 什么都不用做
+    } else if (node.child) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+
+    if (node === finishedWork) {
+      return;
+    }
+
+    if (node.sibling === null) {
+      if (node.return === finishedWork || node.return === null) {
+        return;
+      }
+      hostSubtreeRoot = null;
+      node = node.return as FiberNode;
+    } else {
+      node.sibling.return = node;
+      node = node.sibling;
+      hostSubtreeRoot = null;
+    }
+  }
+}
 
 /* 我要做什么？我现在处理的Mutation阶段，因此看的是MutationMask相关的副作用
     通过subtreeFlags 往下遍历，直到subtreeFlags不存在，那么当前节点就

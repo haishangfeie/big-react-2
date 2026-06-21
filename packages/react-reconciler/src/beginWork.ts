@@ -18,7 +18,7 @@ import {
   OffscreenComponent
 } from './workTags';
 import { reconcileChildFibers, mountChildFibers } from './childFiber';
-import { renderWidthHooks } from './fiberHooks';
+import { renderWithHooks } from './fiberHooks';
 import { Lane } from './fiberLanes';
 import { Ref } from './fiberFlags';
 import { pushProvider } from './fiberContext';
@@ -85,7 +85,7 @@ function markRef(current: FiberNode | null, workInProgress: FiberNode) {
 }
 
 function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
-  const children = renderWidthHooks(wip, renderLane);
+  const children = renderWithHooks(wip, renderLane);
   reconcileChildren(wip, children);
   return wip.child;
 }
@@ -215,6 +215,7 @@ function updateSuspenseFallbackChildren(
   primaryChildFragment.return = workInProgress;
   fallbackChildFragment.return = workInProgress;
   primaryChildFragment.sibling = fallbackChildFragment;
+  fallbackChildFragment.sibling = null;
   workInProgress.child = primaryChildFragment;
 
   return fallbackChildFragment;

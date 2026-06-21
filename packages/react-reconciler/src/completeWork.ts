@@ -11,9 +11,11 @@ import {
   HostComponent,
   HostRoot,
   HostText,
-  ContextProvider
+  ContextProvider,
+  OffscreenComponent,
+  SuspenseComponent
 } from './workTags';
-import { NoFlags, Ref, Update } from './fiberFlags';
+import { NoFlags, Ref, Update, Visibility } from './fiberFlags';
 import { popProvider } from './fiberContext';
 
 const markUpdate = (fiber: FiberNode) => {
@@ -61,8 +63,29 @@ export function completeWork(wip: FiberNode) {
     case HostRoot:
     case FunctionComponent:
     case Fragment:
+    case OffscreenComponent:
       bubbleProperties(wip);
       return null;
+    case SuspenseComponent: {
+      const offscreen = wip.child as FiberNode;
+      const currentOffscreen = offscreen.alternate;
+      const isHidden = offscreen.pendingProps.mode === 'hidden';
+      if (currentOffscreen) {
+        // update
+        const wasHidden = currentOffscreen.pendingProps.mode === 'hidden';
+        if (isHidden !== wasHidden) {
+          offscreen.flags |= Visibility;
+          bubbleProperties(offscreen);
+        }
+      } else {
+        if (isHidden) {
+          offscreen.flags |= Visibility;
+          bubbleProperties(offscreen);
+        }
+      }
+      bubbleProperties(wip);
+      return null;
+    }
     case ContextProvider: {
       const Provider = wip.type;
       const context = Provider._context;

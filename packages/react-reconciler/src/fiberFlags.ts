@@ -6,8 +6,10 @@ export const Update = /*       */ 0b0000010;
 export const ChildDeletion = /**/ 0b0000100;
 export const PassiveEffect = /**/ 0b0001000;
 export const Ref = /*          */ 0b0010000;
+export const Visibility = /*   */ 0b0100000;
 
-export const MutationMask = Placement | Update | ChildDeletion | Ref;
+export const MutationMask =
+  Placement | Update | ChildDeletion | Ref | Visibility;
 export const layoutMask = Ref;
 
 // 该掩码用于统一处理副作用和子节点清理逻辑
