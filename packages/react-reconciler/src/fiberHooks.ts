@@ -9,11 +9,13 @@ import {
   Update,
   UpdateQueue
 } from './updateQueue';
-import { Action, ReactContext } from 'shared/ReactTypes';
+import { Action, ReactContext, Thenable, Usable } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
 import { EffectTag, HookHasEffect, Passive } from './hookEffectTags';
 import { PassiveEffect } from './fiberFlags';
+import { REACT_CONTEXT_TYPE } from 'shared/ReactSymbols';
+import { trackUsedThenable } from './thenable';
 
 export type Hook = {
   memoizedState: any;
@@ -84,7 +86,8 @@ const HooksDispatcherOnMount: Dispatcher = {
   useEffect: mountEffect,
   useTransition: mountTransition,
   useRef: mountRef,
-  useContext: readContext
+  useContext: readContext,
+  use
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -92,7 +95,8 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useEffect: updateEffect,
   useTransition: updateTransition,
   useRef: updateRef,
-  useContext: readContext
+  useContext: readContext,
+  use
 };
 
 function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
@@ -438,4 +442,16 @@ function readContext<T>(context: ReactContext<T>) {
   }
   const value = context._currentValue;
   return value;
+}
+
+function use<T>(usable: Usable<T>): T {
+  if (!usable) {
+    throw new Error('不支持的use参数', { cause: usable });
+  }
+  if (typeof (usable as Thenable<T>).then === 'function') {
+    trackUsedThenable(usable as Thenable<T>);
+  } else if ((usable as ReactContext<T>).$$typeof === REACT_CONTEXT_TYPE) {
+    return readContext(usable as ReactContext<T>);
+  }
+  throw new Error('不支持的use参数', { cause: usable });
 }
