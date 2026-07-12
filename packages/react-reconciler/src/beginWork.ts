@@ -23,6 +23,8 @@ import { Lane } from './fiberLanes';
 import { Ref } from './fiberFlags';
 import { pushProvider } from './fiberContext';
 import { ChildDeletion, Placement } from './fiberFlags';
+import { pushSuspenseHandler } from './suspenseContext';
+import { DidCapture, NoFlags } from './fiberFlags';
 
 export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   switch (wip.tag) {
@@ -108,9 +110,11 @@ function updateContextProvider(wip: FiberNode) {
 }
 
 function updateSuspenseComponent(wip: FiberNode) {
+  pushSuspenseHandler(wip);
   const current = wip.alternate;
-  // 是否挂起 // todo: 暂时还没实现它的值
-  const didSuspend = false;
+  // 是否挂起
+  const didSuspend = (wip.flags & DidCapture) !== NoFlags;
+  wip.flags &= ~DidCapture;
 
   const pendingProps = wip.pendingProps;
   const primaryChildren = pendingProps.children;

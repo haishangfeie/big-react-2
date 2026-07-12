@@ -1,4 +1,4 @@
-import { Props, Key, Ref, ReactElementType } from 'shared/ReactTypes';
+import { Props, Key, Ref, ReactElementType, Wakeable } from 'shared/ReactTypes';
 import {
   Fragment,
   FunctionComponent,
@@ -93,6 +93,7 @@ export class FiberRootNode {
   pendingPassiveEffects: PendingPassiveEffects;
   callbackNode: CallbackNode | null;
   callbackPriority: Lane;
+  pingCache: WeakMap<Wakeable<any>, Set<Lane>> | null;
 
   constructor(container: Container, hostRootFiber: FiberNode) {
     this.container = container;
@@ -110,6 +111,8 @@ export class FiberRootNode {
 
     this.callbackNode = null;
     this.callbackPriority = NoLane;
+
+    this.pingCache = null;
   }
 }
 

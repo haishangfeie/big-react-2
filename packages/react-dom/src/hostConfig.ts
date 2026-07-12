@@ -82,7 +82,7 @@ export const scheduleMicroTask =
 export function hideInstance(instance: Instance) {
   const style = (instance as HTMLElement).style;
   if (style.setProperty) {
-    style.setProperty('display', 'node', 'important');
+    style.setProperty('display', 'none', 'important');
   } else {
     style.display = 'none';
   }

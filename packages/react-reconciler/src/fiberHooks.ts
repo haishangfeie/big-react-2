@@ -449,9 +449,15 @@ function use<T>(usable: Usable<T>): T {
     throw new Error('不支持的use参数', { cause: usable });
   }
   if (typeof (usable as Thenable<T>).then === 'function') {
-    trackUsedThenable(usable as Thenable<T>);
+    return trackUsedThenable(usable as Thenable<T>);
   } else if ((usable as ReactContext<T>).$$typeof === REACT_CONTEXT_TYPE) {
     return readContext(usable as ReactContext<T>);
   }
   throw new Error('不支持的use参数', { cause: usable });
+}
+
+export function resetHooksOnUnwind() {
+  currentlyRenderingFiber = null;
+  workInProgressHook = null;
+  currentHook = null;
 }
