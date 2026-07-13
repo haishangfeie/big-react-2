@@ -114,7 +114,9 @@ function updateSuspenseComponent(wip: FiberNode) {
   const current = wip.alternate;
   // 是否挂起
   const didSuspend = (wip.flags & DidCapture) !== NoFlags;
-  wip.flags &= ~DidCapture;
+  if (didSuspend) {
+    wip.flags &= ~DidCapture;
+  }
 
   const pendingProps = wip.pendingProps;
   const primaryChildren = pendingProps.children;

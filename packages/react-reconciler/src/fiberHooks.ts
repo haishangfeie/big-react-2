@@ -173,6 +173,10 @@ function updateState<S>(): [S, Dispatch<S>] {
 
     (curHook as Hook).baseQueue = baseQueue;
     (curHook as Hook).baseState = baseState;
+  } else {
+    hook.memoizedState = combineState;
+    hook.baseState = combineState;
+    hook.baseQueue = null;
   }
 
   return [

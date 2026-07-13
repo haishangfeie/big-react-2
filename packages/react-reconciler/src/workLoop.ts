@@ -456,7 +456,7 @@ function throwAndUnwindWorkLoop(
   lane: Lane
 ) {
   // 重置FC全局变量
-  resetHooksOnUnwind(unitOfWork);
+  resetHooksOnUnwind();
 
   // 请求返回后重新触发请求(如果是ErrorBoundary的话就可能是做其他的事情）
   // 都用throwException 处理
@@ -479,7 +479,7 @@ function unwindUnitOfWork(unitOfWork: FiberNode) {
 
     const returnFiber: FiberNode | null = node.return;
     if (returnFiber) {
-      returnFiber.deletions = [];
+      returnFiber.deletions = null;
     }
     node = returnFiber;
   }
