@@ -27,6 +27,7 @@ import { pushSuspenseHandler } from './suspenseContext';
 import { DidCapture, NoFlags } from './fiberFlags';
 
 export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
+  console.log('beginWork', wip);
   switch (wip.tag) {
     case HostRoot:
       return updateHostRoot(wip, renderLane);
@@ -60,6 +61,11 @@ function updateHostRoot(wip: FiberNode, renderLane: Lane) {
   const pending = updateQueue.shared.pending;
   updateQueue.shared.pending = null;
   const { memoizedState } = processUpdateQueue(baseState, pending, renderLane);
+
+  const current = wip.alternate;
+  if (current) {
+    current.memoizedState = memoizedState;
+  }
   wip.memoizedState = memoizedState;
   const newChild = memoizedState;
   reconcileChildren(wip, newChild);

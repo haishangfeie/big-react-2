@@ -1,5 +1,5 @@
 import { FiberRootNode } from './fiber';
-import { Lane } from './fiberLanes';
+import { Lane, markRootPinged } from './fiberLanes';
 import { Wakeable } from 'shared/ReactTypes';
 import { markRootUpdated, ensureRootIsScheduled } from './workLoop';
 import { getSuspenseHandler } from './suspenseContext';
@@ -35,7 +35,9 @@ function attachPingListener(
   const ping = () => {
     (pingCache as WeakMap<Wakeable<any>, Set<Lane>>).delete(wakeable);
     // promise状态变化时触发更新
+    console.log('---ping');
     markRootUpdated(root, lane);
+    markRootPinged(root, lane);
     ensureRootIsScheduled(root);
   };
 

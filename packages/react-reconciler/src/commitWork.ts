@@ -143,7 +143,7 @@ function findHostSubtreeRoot(
     if (hostSubtreeRoot === node) {
       hostSubtreeRoot = null;
     }
-    node.sibling.return = node;
+    node.sibling.return = node.return;
     node = node.sibling;
   }
 }
