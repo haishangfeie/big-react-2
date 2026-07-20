@@ -85,7 +85,7 @@ export function markRootPinged(root: FiberRootNode, pingedLane: Lane) {
 
 export function markRootSuspended(root: FiberRootNode, suspendedLane: Lane) {
   root.suspenseLanes |= suspendedLane;
-  root.pendingLanes &= ~suspendedLane;
+  root.pingedLanes &= ~suspendedLane;
 }
 
 export function getNextLane(root: FiberRootNode): Lane {
