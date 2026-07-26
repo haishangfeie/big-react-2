@@ -457,7 +457,7 @@ function renderRoot(
     } catch (error) {
       console.warn('workLoop发生错误', error);
 
-      handleThrow(root, error);
+      handleThrow(error);
     }
     // eslint-disable-next-line no-constant-condition
   } while (true);
@@ -481,7 +481,7 @@ function renderRoot(
   return RootCompleted;
 }
 
-function handleThrow(root: FiberRootNode, thrownValue: any) {
+function handleThrow(thrownValue: any) {
   // Error Boundary
 
   // SuspenseException

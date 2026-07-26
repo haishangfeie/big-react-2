@@ -85,8 +85,8 @@ export class FiberNode {
 
     this.deletions = null;
 
-    this.lanes = NoLane;
-    this.childLanes = NoLane;
+    this.lanes = NoLanes;
+    this.childLanes = NoLanes;
   }
 }
 
@@ -150,7 +150,7 @@ export const createWorkInProgress = (
   wip.memoizedProps = current.memoizedProps;
 
   wip.lanes = current.lanes;
-  wip.childLanes = current.lanes;
+  wip.childLanes = current.childLanes;
   return wip;
 };
 
