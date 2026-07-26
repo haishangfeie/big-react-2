@@ -1,6 +1,9 @@
 {
-  "cSpell.words": [
-    "Unkeyed",
-    "Wakeable"
+  "cSpell.words": ["Unkeyed", "Wakeable"],
+  "json.schemas": [
+    {
+      "fileMatch": ["**/.eslintrc", "**/.eslintrc.json", "package.json"],
+      "url": "https://json.schemastore.org/eslintrc.json"
+    }
   ]
 }

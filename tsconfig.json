@@ -3,9 +3,9 @@
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "module": "ESNext",
+    "module": "node16",
     "lib": ["ESNext", "DOM"],
-    "moduleResolution": "Node",
+    "moduleResolution": "node16",
     "strict": true,
     "sourceMap": false,
     "resolveJsonModule": true,
@@ -16,11 +16,12 @@
     "noUnusedParameters": true,
     "noImplicitReturns": false,
     "skipLibCheck": true,
-    "baseUrl": "./packages",
-    "ignoreDeprecations": "6.0",
     "paths": {
-      "hostConfig": ["./react-dom/src/hostConfig.ts"]
-    }
+      "*": ["./packages/*"],
+      "hostConfig": ["./packages/react-dom/src/hostConfig"],
+      "react/src/*": ["./packages/react/src/*"]
+    },
+    "ignoreDeprecations": "5.0"
   },
   "include": ["./packages/**/*"]
 }
