@@ -11,7 +11,7 @@ import {
 } from './updateQueue';
 import { Action, ReactContext, Thenable, Usable } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
-import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
+import { Lane, NoLane, requestUpdateLane, mergeLanes } from './fiberLanes';
 import { EffectTag, HookHasEffect, Passive } from './hookEffectTags';
 import { PassiveEffect } from './fiberFlags';
 import { REACT_CONTEXT_TYPE } from 'shared/ReactSymbols';
@@ -165,7 +165,12 @@ function updateState<S>(): [S, Dispatch<S>] {
     const { memoizedState, baseQueue, baseState } = processUpdateQueue(
       combineState,
       combinedPending,
-      currentRenderLane
+      currentRenderLane,
+      (update) => {
+        const lane = update.lane;
+        const fiber = currentlyRenderingFiber as FiberNode;
+        fiber.lanes = mergeLanes(fiber.lanes, lane);
+      }
     );
     hook.memoizedState = memoizedState;
     hook.baseQueue = baseQueue;
@@ -215,7 +220,7 @@ function dispatchSetState<S>(
 ) {
   const lane = requestUpdateLane();
   const update = createUpdate(action, lane);
-  enqueueUpdate(updateQueue, update);
+  enqueueUpdate(updateQueue, update, fiber, lane);
   scheduleUpdateOnFiber(fiber, lane);
 }
 

@@ -19,7 +19,7 @@ import {
 } from './workTags';
 import { reconcileChildFibers, mountChildFibers } from './childFiber';
 import { renderWithHooks } from './fiberHooks';
-import { Lane } from './fiberLanes';
+import { Lane, NoLane } from './fiberLanes';
 import { Ref } from './fiberFlags';
 import { pushProvider } from './fiberContext';
 import { ChildDeletion, Placement } from './fiberFlags';
@@ -28,6 +28,12 @@ import { DidCapture, NoFlags } from './fiberFlags';
 
 export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   console.log('beginWork', wip);
+
+  // todo: bailout
+
+  // beginWork会消费lane
+  wip.lanes = NoLane;
+
   switch (wip.tag) {
     case HostRoot:
       return updateHostRoot(wip, renderLane);

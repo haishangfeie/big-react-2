@@ -18,6 +18,7 @@ import {
 import { NoFlags, Ref, Update, Visibility } from './fiberFlags';
 import { popProvider } from './fiberContext';
 import { popSuspenseHandler } from './suspenseContext';
+import { NoLane, mergeLanes } from './fiberLanes';
 
 const markUpdate = (fiber: FiberNode) => {
   fiber.flags |= Update;
@@ -152,10 +153,15 @@ function bubbleProperties(wip: FiberNode) {
 
   let child = wip.child;
 
+  let childLanes = NoLane;
+
   while (child !== null) {
     subtreeFlags |= child.subtreeFlags;
     subtreeFlags |= child.flags;
-
+    childLanes = mergeLanes(
+      childLanes,
+      mergeLanes(child.lanes, child.childLanes)
+    );
     child.return = wip;
     child = child.sibling;
   }

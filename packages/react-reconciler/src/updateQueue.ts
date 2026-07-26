@@ -1,6 +1,7 @@
 import { Dispatch } from 'react/src/currentDispatcher';
 import { Action } from 'shared/ReactTypes';
-import { isSubsetOfLanes, Lane, NoLane } from './fiberLanes';
+import { isSubsetOfLanes, Lane, NoLane, mergeLanes } from './fiberLanes';
+import { FiberNode } from './fiber';
 
 export interface Update<State> {
   action: Action<State>;
@@ -40,7 +41,9 @@ export const createUpdateQueue = <State>(): UpdateQueue<State> => {
 
 export const enqueueUpdate = <State>(
   updateQueue: UpdateQueue<State>,
-  update: Update<State>
+  update: Update<State>,
+  fiber: FiberNode,
+  lane: Lane
 ) => {
   const pending = updateQueue.shared.pending;
   if (pending === null) {
@@ -50,13 +53,21 @@ export const enqueueUpdate = <State>(
     pending.next = update;
   }
   updateQueue.shared.pending = update;
+
+  fiber.lanes = mergeLanes(fiber.lanes, lane);
+
+  const current = fiber.alternate;
+  if (current) {
+    current.lanes = mergeLanes(current.lanes, lane);
+  }
 };
 
 export const processUpdateQueue = <State>(
   baseState: State,
   // 这个pendingUpdate应该在外部就已经和baseQueue进行了合并
   pendingUpdate: Update<State> | null,
-  renderLane: Lane
+  renderLane: Lane,
+  onSkipUpdate?: <State>(update: Update<State>) => void
 ): {
   memoizedState: State;
   baseState: State;
@@ -108,6 +119,7 @@ export const processUpdateQueue = <State>(
       if (!isSubsetOfLanes(renderLane, lane)) {
         // 是否是第一个被跳过的
         const cloneUpdate = createUpdate(action, lane);
+        onSkipUpdate?.(cloneUpdate);
         if (newBaseQueueLast === null) {
           newBaseState = newState;
           newBaseQueueFirst = cloneUpdate;

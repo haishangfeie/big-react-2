@@ -77,7 +77,7 @@ let workInProgressSuspendedReason: SuspendedReason = NotSuspended;
 let workInProgressThrownValue: any = null;
 
 export const scheduleUpdateOnFiber = (fiber: FiberNode, lane: Lane) => {
-  const root = markUpdateFromFiberToRoot(fiber);
+  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
 
   if (root !== null) {
     markRootUpdated(root, lane);
@@ -131,12 +131,18 @@ export function markRootUpdated(root: FiberRootNode, lane: Lane) {
   root.pendingLanes = mergeLanes(root.pendingLanes, lane);
 }
 
-export const markUpdateFromFiberToRoot = (
-  fiber: FiberNode
+export const markUpdateLaneFromFiberToRoot = (
+  fiber: FiberNode,
+  lane: Lane
 ): FiberRootNode | null => {
   let node = fiber;
   while (node.return !== null) {
     node = node.return;
+    node.childLanes = mergeLanes(node.childLanes, lane);
+    const current = node.alternate;
+    if (current) {
+      current.childLanes = mergeLanes(current.childLanes, lane);
+    }
   }
   if (node.tag === HostRoot) {
     return node.stateNode;
