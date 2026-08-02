@@ -193,7 +193,7 @@ function updateState<S>(): [S, Dispatch<S>] {
     hook.baseQueue = null;
   }
 
-  if (hook.memoizedState !== prevMemoizedState) {
+  if (!Object.is(hook.memoizedState, prevMemoizedState)) {
     markWipReceivedUpdate();
   }
 
@@ -486,6 +486,7 @@ export function resetHooksOnUnwind() {
 
 export const bailoutHook = (wip: FiberNode, renderLane: Lane) => {
   const current = wip.alternate as FiberNode;
+  wip.updateQueue = current.updateQueue;
   current.lanes = removeLanes(current.lanes, renderLane);
   wip.flags &= ~PassiveEffect;
 };

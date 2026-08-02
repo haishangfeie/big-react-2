@@ -49,11 +49,11 @@ export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
       didReceiveUpdate = true; // 接收更新就是不命中bailout
     } else {
       // 判断context、state ,通过lanes，不过暂时应该context没有改变lane?
-      const isScheduledUpdateOrContext = checkScheduledUpdateOrContext(
+      const hasScheduledStateOrContext = checkScheduledUpdateOrContext(
         current,
         renderLane
       );
-      if (!isScheduledUpdateOrContext) {
+      if (!hasScheduledStateOrContext) {
         // 命中bailout
         switch (wip.tag) {
           case ContextProvider: {
@@ -114,9 +114,7 @@ function checkScheduledUpdateOrContext(
 }
 
 function bailoutOnAlreadyFinishedWork(wip: FiberNode, renderLane: Lane) {
-  const current = wip.alternate;
-
-  if (current && !includeSomeLanes(wip.childLanes, renderLane)) {
+  if (!includeSomeLanes(wip.childLanes, renderLane)) {
     if (__DEV__) {
       console.warn('bailout整颗子树', wip);
     }
@@ -136,9 +134,9 @@ function updateHostRoot(wip: FiberNode, renderLane: Lane) {
   updateQueue.shared.pending = null;
   const { memoizedState } = processUpdateQueue(baseState, pending, renderLane);
   const current = wip.alternate;
-  let prevChild;
+  // 不过这里 实际上 current.memoizedState 应该和wip.memoizedState 是一样的，因为hostRoot都是通过createWorkInProgress创建的，而这个方法里面的wip.memoizedState 是等于 current.memoizedState的
+  const prevChild = wip.memoizedState;
   if (current) {
-    prevChild = current.memoizedState;
     if (!current.memoizedState) {
       current.memoizedState = memoizedState;
     }
@@ -177,6 +175,7 @@ function markRef(current: FiberNode | null, workInProgress: FiberNode) {
 function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
   const children = renderWithHooks(wip, renderLane);
   const current = wip.alternate;
+  // 这里要判断current是因为只有update时didReceiveUpdate的状态才会因为计算state和原来不一致而变成true,mount时永远都是false，不加上current会以为每次都命中bailout
   if (current && !didReceiveUpdate) {
     bailoutHook(wip, renderLane);
     return bailoutOnAlreadyFinishedWork(wip, renderLane);
