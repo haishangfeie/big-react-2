@@ -11,11 +11,18 @@ import {
 } from './updateQueue';
 import { Action, ReactContext, Thenable, Usable } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
-import { Lane, NoLane, requestUpdateLane, mergeLanes } from './fiberLanes';
+import {
+  Lane,
+  NoLane,
+  requestUpdateLane,
+  mergeLanes,
+  removeLanes
+} from './fiberLanes';
 import { EffectTag, HookHasEffect, Passive } from './hookEffectTags';
 import { PassiveEffect } from './fiberFlags';
 import { REACT_CONTEXT_TYPE } from 'shared/ReactSymbols';
 import { trackUsedThenable } from './thenable';
+import { markWipReceivedUpdate } from './beginWork';
 
 export type Hook = {
   memoizedState: any;
@@ -135,6 +142,8 @@ function updateState<S>(): [S, Dispatch<S>] {
   const { baseState } = hook;
   const updateQueue = hook.updateQueue as UpdateQueue<S>;
 
+  const prevMemoizedState = hook.memoizedState;
+
   const pending = updateQueue.shared.pending;
 
   const curHook = currentHook;
@@ -182,6 +191,10 @@ function updateState<S>(): [S, Dispatch<S>] {
     hook.memoizedState = combineState;
     hook.baseState = combineState;
     hook.baseQueue = null;
+  }
+
+  if (hook.memoizedState !== prevMemoizedState) {
+    markWipReceivedUpdate();
   }
 
   return [
@@ -470,3 +483,9 @@ export function resetHooksOnUnwind() {
   workInProgressHook = null;
   currentHook = null;
 }
+
+export const bailoutHook = (wip: FiberNode, renderLane: Lane) => {
+  const current = wip.alternate as FiberNode;
+  current.lanes = removeLanes(current.lanes, renderLane);
+  wip.flags &= ~PassiveEffect;
+};

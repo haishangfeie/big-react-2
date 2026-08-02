@@ -17,19 +17,61 @@ import {
   SuspenseComponent,
   OffscreenComponent
 } from './workTags';
-import { reconcileChildFibers, mountChildFibers } from './childFiber';
-import { renderWithHooks } from './fiberHooks';
-import { Lane, NoLane } from './fiberLanes';
+import {
+  reconcileChildFibers,
+  mountChildFibers,
+  cloneChildFibers
+} from './childFiber';
+import { renderWithHooks, bailoutHook } from './fiberHooks';
+import { Lane, NoLane, includeSomeLanes } from './fiberLanes';
 import { Ref } from './fiberFlags';
 import { pushProvider } from './fiberContext';
 import { ChildDeletion, Placement } from './fiberFlags';
 import { pushSuspenseHandler } from './suspenseContext';
 import { DidCapture, NoFlags } from './fiberFlags';
 
+let didReceiveUpdate = false;
+
+export function markWipReceivedUpdate() {
+  didReceiveUpdate = true;
+}
+
 export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   console.log('beginWork', wip);
+  didReceiveUpdate = false;
 
-  // todo: bailout
+  const current = wip.alternate;
+  if (current) {
+    if (
+      current.pendingProps !== wip.pendingProps ||
+      current.type !== wip.type
+    ) {
+      didReceiveUpdate = true; // 接收更新就是不命中bailout
+    } else {
+      // 判断context、state ,通过lanes，不过暂时应该context没有改变lane?
+      const isScheduledUpdateOrContext = checkScheduledUpdateOrContext(
+        current,
+        renderLane
+      );
+      if (!isScheduledUpdateOrContext) {
+        // 命中bailout
+        switch (wip.tag) {
+          case ContextProvider: {
+            const pendingProps = wip.pendingProps;
+            const value = pendingProps.value;
+            const Provider = wip.type;
+            const context = Provider._context;
+            pushProvider(context, value);
+            break;
+            // TODO: Suspense 没有实现
+          }
+          default:
+            break;
+        }
+        return bailoutOnAlreadyFinishedWork(wip, renderLane);
+      }
+    }
+  }
 
   // beginWork会消费lane
   wip.lanes = NoLane;
@@ -61,18 +103,52 @@ export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   return null;
 }
 
+function checkScheduledUpdateOrContext(
+  current: FiberNode,
+  renderLane: Lane
+): boolean {
+  if (includeSomeLanes(current.lanes, renderLane)) {
+    return true;
+  }
+  return false;
+}
+
+function bailoutOnAlreadyFinishedWork(wip: FiberNode, renderLane: Lane) {
+  const current = wip.alternate;
+
+  if (current && !includeSomeLanes(wip.childLanes, renderLane)) {
+    if (__DEV__) {
+      console.warn('bailout整颗子树', wip);
+    }
+    return null;
+  }
+  if (__DEV__) {
+    console.warn('bailout 当前的fiber的子fiber', wip);
+  }
+  cloneChildFibers(wip);
+  return wip.child;
+}
+
 function updateHostRoot(wip: FiberNode, renderLane: Lane) {
   const baseState = wip.memoizedState;
   const updateQueue = wip.updateQueue as UpdateQueue<ReactElementType | null>;
   const pending = updateQueue.shared.pending;
   updateQueue.shared.pending = null;
   const { memoizedState } = processUpdateQueue(baseState, pending, renderLane);
-
   const current = wip.alternate;
+  let prevChild;
   if (current) {
-    current.memoizedState = memoizedState;
+    prevChild = current.memoizedState;
+    if (!current.memoizedState) {
+      current.memoizedState = memoizedState;
+    }
   }
+
   wip.memoizedState = memoizedState;
+
+  if (prevChild === memoizedState) {
+    return bailoutOnAlreadyFinishedWork(wip, renderLane);
+  }
   const newChild = memoizedState;
   reconcileChildren(wip, newChild);
   return wip.child;
@@ -100,6 +176,11 @@ function markRef(current: FiberNode | null, workInProgress: FiberNode) {
 
 function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
   const children = renderWithHooks(wip, renderLane);
+  const current = wip.alternate;
+  if (current && !didReceiveUpdate) {
+    bailoutHook(wip, renderLane);
+    return bailoutOnAlreadyFinishedWork(wip, renderLane);
+  }
   reconcileChildren(wip, children);
   return wip.child;
 }

@@ -100,3 +100,11 @@ export function getNextLane(root: FiberRootNode): Lane {
     return NoLane;
   }
 }
+
+export function includeSomeLanes(set: Lanes, subset: Lane | Lanes) {
+  return (set & subset) !== NoLanes;
+}
+
+export function removeLanes(set: Lanes, subset: Lane | Lanes) {
+  return set & ~subset;
+}

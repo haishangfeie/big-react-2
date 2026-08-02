@@ -12,7 +12,8 @@
     "demos:transition": "vite serve demos/transition --config scripts/vite/vite.config.js --force",
     "demos:ref": "vite serve demos/ref --config scripts/vite/vite.config.js --force",
     "demos:context": "vite serve demos/context --config scripts/vite/vite.config.js --force",
-    "demos:suspense-use": "vite serve demos/suspense-use --config scripts/vite/vite.config.js --force"
+    "demos:suspense-use": "vite serve demos/suspense-use --config scripts/vite/vite.config.js --force",
+    "demos:performance": "vite serve demos/performance --config scripts/vite/vite.config.js --force"
   },
   "keywords": [],
   "author": "",
