@@ -7,13 +7,15 @@ import {
   enqueueUpdate,
   processUpdateQueue,
   Update,
-  UpdateQueue
+  UpdateQueue,
+  basicStateReducer
 } from './updateQueue';
 import { Action, ReactContext, Thenable, Usable } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import {
   Lane,
   NoLane,
+  NoLanes,
   requestUpdateLane,
   mergeLanes,
   removeLanes
@@ -26,7 +28,7 @@ import { markWipReceivedUpdate } from './beginWork';
 
 export type Hook = {
   memoizedState: any;
-  updateQueue: UpdateQueue<any> | null;
+  updateQueue: FCUpdateQueue<any> | null;
   next: Hook | null;
   baseQueue: Update<any> | null;
   baseState: any;
@@ -46,6 +48,7 @@ export type Effect = {
 
 export interface FCUpdateQueue<State> extends UpdateQueue<State> {
   lastEffect: Effect | null;
+  lastRenderedState: State;
 }
 
 const { currentDispatcher } = internals;
@@ -121,7 +124,8 @@ function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
   hook.memoizedState = memoizedState;
   hook.baseState = memoizedState;
 
-  const updateQueue = createUpdateQueue<S>();
+  const updateQueue = createFCUpdateQueue<S>();
+
   hook.updateQueue = updateQueue;
 
   const fiber = currentlyRenderingFiber;
@@ -129,7 +133,7 @@ function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
     dispatchSetState(fiber, updateQueue, action);
   };
   updateQueue.dispatch = dispatch;
-
+  updateQueue.lastRenderedState = memoizedState;
   return [memoizedState, dispatch];
 }
 
@@ -140,7 +144,7 @@ function updateState<S>(): [S, Dispatch<S>] {
   const hook = updateWorkInProgressHook();
 
   const { baseState } = hook;
-  const updateQueue = hook.updateQueue as UpdateQueue<S>;
+  const updateQueue = hook.updateQueue as FCUpdateQueue<S>;
 
   const prevMemoizedState = hook.memoizedState;
 
@@ -196,7 +200,7 @@ function updateState<S>(): [S, Dispatch<S>] {
   if (!Object.is(hook.memoizedState, prevMemoizedState)) {
     markWipReceivedUpdate();
   }
-
+  updateQueue.lastRenderedState = hook.memoizedState;
   return [
     hook.memoizedState,
     /* 
@@ -228,11 +232,33 @@ function updateState<S>(): [S, Dispatch<S>] {
 
 function dispatchSetState<S>(
   fiber: FiberNode,
-  updateQueue: UpdateQueue<S>,
+  updateQueue: FCUpdateQueue<S>,
   action: Action<S>
 ) {
   const lane = requestUpdateLane();
   const update = createUpdate(action, lane);
+
+  const current = fiber.alternate;
+
+  if (
+    fiber.lanes === NoLanes &&
+    (current === null || current.lanes === NoLanes)
+  ) {
+    // 比较当前state和计算后的state
+    const lastRenderedState = updateQueue.lastRenderedState;
+
+    const eagerState = basicStateReducer(lastRenderedState, action);
+    update.hasEagerState = true;
+    update.eagerState = eagerState;
+    if (Object.is(eagerState, lastRenderedState)) {
+      if (__DEV__) {
+        console.log('命中eagerState策略');
+      }
+
+      enqueueUpdate(updateQueue, update, fiber, NoLane);
+      return;
+    }
+  }
   enqueueUpdate(updateQueue, update, fiber, lane);
   scheduleUpdateOnFiber(fiber, lane);
 }
