@@ -254,7 +254,7 @@ function dispatchSetState<S>(
       if (__DEV__) {
         console.log('命中eagerState策略');
       }
-
+      update.lane = NoLane;
       enqueueUpdate(updateQueue, update, fiber, NoLane);
       return;
     }
