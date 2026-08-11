@@ -43,7 +43,7 @@ export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
   const current = wip.alternate;
   if (current) {
     if (
-      current.pendingProps !== wip.pendingProps ||
+      current.memoizedProps !== wip.pendingProps ||
       current.type !== wip.type
     ) {
       didReceiveUpdate = true; // 接收更新就是不命中bailout
