@@ -15,7 +15,8 @@ import {
   HostText,
   ContextProvider,
   SuspenseComponent,
-  OffscreenComponent
+  OffscreenComponent,
+  MemoComponent
 } from './workTags';
 import {
   reconcileChildFibers,
@@ -29,6 +30,7 @@ import { pushProvider } from './fiberContext';
 import { ChildDeletion, Placement } from './fiberFlags';
 import { pushSuspenseHandler } from './suspenseContext';
 import { DidCapture, NoFlags } from './fiberFlags';
+import { shallowEqual } from 'shared/shallowEquals';
 
 let didReceiveUpdate = false;
 
@@ -87,6 +89,8 @@ export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
       return updateFunctionComponent(wip, renderLane);
     case Fragment:
       return updateFragment(wip);
+    case MemoComponent:
+      return updateMemoComponent(wip, renderLane);
     case ContextProvider:
       return updateContextProvider(wip);
     case SuspenseComponent:
@@ -124,6 +128,10 @@ function bailoutOnAlreadyFinishedWork(wip: FiberNode, renderLane: Lane) {
     console.warn('bailout 当前的fiber的子fiber', wip);
   }
   cloneChildFibers(wip);
+  const current = wip.alternate;
+  if (current) {
+    wip.lanes = current.lanes;
+  }
   return wip.child;
 }
 
@@ -173,7 +181,7 @@ function markRef(current: FiberNode | null, workInProgress: FiberNode) {
 }
 
 function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
-  const children = renderWithHooks(wip, renderLane);
+  const children = renderWithHooks(wip, wip.type, renderLane);
   const current = wip.alternate;
   // 这里要判断current是因为只有update时didReceiveUpdate的状态才会因为计算state和原来不一致而变成true,mount时永远都是false，不加上current会以为每次都命中bailout
   if (current && !didReceiveUpdate) {
@@ -186,6 +194,34 @@ function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
 
 function updateFragment(wip: FiberNode) {
   const children = wip.pendingProps;
+  reconcileChildren(wip, children);
+  return wip.child;
+}
+
+function updateMemoComponent(wip: FiberNode, renderLane: Lane) {
+  const current = wip.alternate;
+  if (current) {
+    const oldProps = current.memoizedProps;
+    const newProps = wip.pendingProps;
+    const compareReal = wip.type.compare || shallowEqual;
+    if (!compareReal(oldProps, newProps) || current.type !== wip.type) {
+      didReceiveUpdate = true;
+    } else {
+      const hasScheduledStateOrContext = checkScheduledUpdateOrContext(
+        current,
+        renderLane
+      );
+      if (!hasScheduledStateOrContext) {
+        return bailoutOnAlreadyFinishedWork(wip, renderLane);
+      }
+    }
+  }
+  const Component = wip.type.type;
+  const children = renderWithHooks(wip, Component, renderLane);
+  if (current && !didReceiveUpdate) {
+    bailoutHook(wip, renderLane);
+    return bailoutOnAlreadyFinishedWork(wip, renderLane);
+  }
   reconcileChildren(wip, children);
   return wip.child;
 }

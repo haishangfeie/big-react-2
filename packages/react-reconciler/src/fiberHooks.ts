@@ -60,7 +60,11 @@ let currentHook: Hook | null = null;
 
 let currentRenderLane = NoLane;
 
-export function renderWithHooks(wip: FiberNode, renderLane: Lane) {
+export function renderWithHooks(
+  wip: FiberNode,
+  Component: any,
+  renderLane: Lane
+) {
   // 设置当前的fiber
   currentlyRenderingFiber = wip;
   workInProgressHook = null;
@@ -78,8 +82,6 @@ export function renderWithHooks(wip: FiberNode, renderLane: Lane) {
     // mount
     currentDispatcher.current = HooksDispatcherOnMount;
   }
-
-  const Component = wip.type;
   const props = wip.pendingProps;
   const children = Component(props);
 

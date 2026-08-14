@@ -19,7 +19,8 @@
     "paths": {
       "*": ["./packages/*"],
       "hostConfig": ["./packages/react-dom/src/hostConfig"],
-      "react/src/*": ["./packages/react/src/*"]
+      "react/src/*": ["./packages/react/src/*"],
+      "shared/*": ["./packages/shared/*"],
     },
     "ignoreDeprecations": "5.0"
   },

@@ -14,6 +14,8 @@ export { isValidElement } from './src/jsx';
 
 export { createContext } from './src/context';
 
+export { memo } from './src/memo';
+
 export const useState: Dispatcher['useState'] = (initState) => {
   const dispatcher = resolveDispatcher();
   return dispatcher.useState(initState);

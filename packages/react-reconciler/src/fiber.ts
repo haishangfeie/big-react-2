@@ -6,12 +6,14 @@ import {
   WorkType,
   ContextProvider,
   OffscreenComponent,
-  SuspenseComponent
+  SuspenseComponent,
+  MemoComponent
 } from './workTags';
 import { NoFlags, Flags } from './fiberFlags';
 import { Container } from 'hostConfig';
 import {
   REACT_FRAGMENT_TYPE,
+  REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_SUSPENSE_TYPE
 } from 'shared/ReactSymbols';
@@ -159,12 +161,20 @@ export function createFiberFromElement(element: ReactElementType) {
   const { type, props, key } = element;
   if (typeof type === 'string') {
     tag = HostComponent;
-  } else if (
-    typeof type === 'object' &&
-    type !== null &&
-    type.$$typeof === REACT_PROVIDER_TYPE
-  ) {
-    tag = ContextProvider;
+  } else if (typeof type === 'object' && type !== null) {
+    switch (type.$$typeof) {
+      case REACT_PROVIDER_TYPE:
+        tag = ContextProvider;
+        break;
+      case REACT_MEMO_TYPE:
+        tag = MemoComponent;
+        break;
+      default:
+        if (__DEV__) {
+          console.warn('createFiberFromElement未处理类型', element);
+        }
+        break;
+    }
   } else if (type === REACT_SUSPENSE_TYPE) {
     tag = SuspenseComponent;
   } else if (typeof type !== 'function' && __DEV__) {

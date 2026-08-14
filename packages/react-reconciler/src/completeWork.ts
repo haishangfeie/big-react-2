@@ -13,7 +13,8 @@ import {
   HostText,
   ContextProvider,
   OffscreenComponent,
-  SuspenseComponent
+  SuspenseComponent,
+  MemoComponent
 } from './workTags';
 import { NoFlags, Ref, Update, Visibility } from './fiberFlags';
 import { popProvider } from './fiberContext';
@@ -62,6 +63,7 @@ export function completeWork(wip: FiberNode) {
       }
       bubbleProperties(wip);
       return null;
+    case MemoComponent:
     case HostRoot:
     case FunctionComponent:
     case Fragment:
