@@ -8,6 +8,6 @@ export function memo(
   return {
     $$typeof: REACT_MEMO_TYPE,
     type,
-    compare
+    compare: compare === void 0 ? null : compare
   };
 }

@@ -19,7 +19,8 @@ const Cpn = memo(function ({ num, name }) {
   console.log(
     "%c render",
     "background: yellow; color: black; font-weight: bold; padding: 2px 6px;",
-    name
+    name,
+    num
   );
   
   return (

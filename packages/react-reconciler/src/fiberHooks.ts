@@ -62,7 +62,7 @@ let currentRenderLane = NoLane;
 
 export function renderWithHooks(
   wip: FiberNode,
-  Component: any,
+  Component: FiberNode['type'],
   renderLane: Lane
 ) {
   // 设置当前的fiber

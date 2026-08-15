@@ -11,14 +11,14 @@ export function shallowEqual(a: any, b: any) {
     return false;
   }
 
-  const keyA = Object.keys(a);
-  const keyB = Object.keys(b);
-  if (keyA.length !== keyB.length) {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) {
     return false;
   }
 
-  for (let i = 0; i < keyA.length; i++) {
-    const key = keyA[i];
+  for (let i = 0; i < keysA.length; i++) {
+    const key = keysA[i];
     if (!{}.hasOwnProperty.call(b, key) || !Object.is(a[key], b[key])) {
       return false;
     }

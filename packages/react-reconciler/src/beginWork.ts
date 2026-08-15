@@ -86,7 +86,7 @@ export function beginWork(wip: FiberNode, renderLane: Lane): FiberNode | null {
     case HostText:
       return null;
     case FunctionComponent:
-      return updateFunctionComponent(wip, renderLane);
+      return updateFunctionComponent(wip, wip.type, renderLane);
     case Fragment:
       return updateFragment(wip);
     case MemoComponent:
@@ -180,8 +180,12 @@ function markRef(current: FiberNode | null, workInProgress: FiberNode) {
   }
 }
 
-function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
-  const children = renderWithHooks(wip, wip.type, renderLane);
+function updateFunctionComponent(
+  wip: FiberNode,
+  Component: FiberNode['type'],
+  renderLane: Lane
+) {
+  const children = renderWithHooks(wip, Component, renderLane);
   const current = wip.alternate;
   // 这里要判断current是因为只有update时didReceiveUpdate的状态才会因为计算state和原来不一致而变成true,mount时永远都是false，不加上current会以为每次都命中bailout
   if (current && !didReceiveUpdate) {
@@ -204,7 +208,7 @@ function updateMemoComponent(wip: FiberNode, renderLane: Lane) {
     const oldProps = current.memoizedProps;
     const newProps = wip.pendingProps;
     const compareReal = wip.type.compare || shallowEqual;
-    if (!compareReal(oldProps, newProps) || current.type !== wip.type) {
+    if (!compareReal(oldProps, newProps) || current.ref !== wip.ref) {
       didReceiveUpdate = true;
     } else {
       const hasScheduledStateOrContext = checkScheduledUpdateOrContext(
@@ -212,18 +216,13 @@ function updateMemoComponent(wip: FiberNode, renderLane: Lane) {
         renderLane
       );
       if (!hasScheduledStateOrContext) {
+        wip.pendingProps = oldProps;
         return bailoutOnAlreadyFinishedWork(wip, renderLane);
       }
     }
   }
   const Component = wip.type.type;
-  const children = renderWithHooks(wip, Component, renderLane);
-  if (current && !didReceiveUpdate) {
-    bailoutHook(wip, renderLane);
-    return bailoutOnAlreadyFinishedWork(wip, renderLane);
-  }
-  reconcileChildren(wip, children);
-  return wip.child;
+  return updateFunctionComponent(wip, Component, renderLane);
 }
 
 function updateContextProvider(wip: FiberNode) {
