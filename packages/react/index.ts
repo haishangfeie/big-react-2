@@ -46,6 +46,16 @@ export const use: Dispatcher['use'] = <T>(usable: Usable<T>) => {
   return dispatcher.use(usable);
 };
 
+export const useMemo: Dispatcher['useMemo'] = (create, deps) => {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useMemo(create, deps);
+};
+
+export const useCallback: Dispatcher['useCallback'] = (create, deps) => {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useCallback(create, deps);
+};
+
 export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED__ = {
   currentDispatcher,
   currentBatchConfig

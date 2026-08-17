@@ -36,13 +36,13 @@ export type Hook = {
 
 type EffectCallback = () => void | EffectCleanup;
 type EffectCleanup = () => void;
-type EffectDeps = any[] | null;
+export type HookDeps = any[] | null;
 
 export type Effect = {
   tag: EffectTag;
   create: EffectCallback | void;
   destroy: EffectCleanup | void;
-  deps: EffectDeps;
+  deps: HookDeps;
   next: Effect | null;
 };
 
@@ -99,7 +99,9 @@ const HooksDispatcherOnMount: Dispatcher = {
   useTransition: mountTransition,
   useRef: mountRef,
   useContext: readContext,
-  use
+  use,
+  useMemo: mountMemo,
+  useCallback: mountCallback
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -108,7 +110,9 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
   useRef: updateRef,
   useContext: readContext,
-  use
+  use,
+  useMemo: updateMemo,
+  useCallback: updateCallback
 };
 
 function mountState<S>(initialState: S | (() => S)): [S, Dispatch<S>] {
@@ -334,7 +338,7 @@ function updateWorkInProgressHook() {
   return workInProgressHook;
 }
 
-function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+function mountEffect(create: EffectCallback | void, deps: HookDeps | void) {
   if (currentlyRenderingFiber === null) {
     throw new Error('useEffect只能在函数组件中使用');
   }
@@ -355,7 +359,7 @@ function pushEffect(
   tag: EffectTag,
   create: EffectCallback | void,
   destroy: EffectCleanup | void,
-  deps: EffectDeps
+  deps: HookDeps
 ): Effect {
   const effect: Effect = {
     tag,
@@ -393,7 +397,7 @@ function createFCUpdateQueue<State>(): FCUpdateQueue<State> {
   return updateQueue;
 }
 
-function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+function updateEffect(create: EffectCallback | void, deps: HookDeps | void) {
   if (currentlyRenderingFiber === null) {
     throw new Error('useEffect只能在函数组件中使用');
   }
@@ -419,7 +423,7 @@ function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
   hook.memoizedState = effect;
 }
 
-function areHookInputsEqual(nextDeps: EffectDeps, prevDeps: EffectDeps) {
+function areHookInputsEqual(nextDeps: HookDeps, prevDeps: HookDeps) {
   if (nextDeps === null || prevDeps === null) {
     return false;
   }
@@ -518,3 +522,45 @@ export const bailoutHook = (wip: FiberNode, renderLane: Lane) => {
   current.lanes = removeLanes(current.lanes, renderLane);
   wip.flags &= ~PassiveEffect;
 };
+
+export function mountCallback<T>(callback: T, deps: HookDeps | undefined): T {
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = [callback, deps === void 0 ? null : deps];
+
+  return callback;
+}
+
+export function updateCallback<T>(callback: T, deps: HookDeps | undefined): T {
+  const hook = updateWorkInProgressHook();
+  const currentDeps = deps === void 0 ? null : deps;
+  const [prevCallback, prevDeps] = hook.memoizedState;
+
+  if (areHookInputsEqual(currentDeps, prevDeps)) {
+    return prevCallback;
+  }
+  hook.memoizedState = [callback, currentDeps];
+
+  return callback;
+}
+
+function mountMemo<T>(nextCreator: () => T, deps: HookDeps | undefined) {
+  const hook = mountWorkInProgressHook();
+  const state = nextCreator();
+  hook.memoizedState = [state, deps === undefined ? null : deps];
+
+  return state;
+}
+
+function updateMemo<T>(nextCreator: () => T, deps: HookDeps | undefined) {
+  const hook = updateWorkInProgressHook();
+  const currentDeps = deps === void 0 ? null : deps;
+  const [prevState, prevDeps] = hook.memoizedState;
+
+  if (areHookInputsEqual(currentDeps, prevDeps)) {
+    return prevState;
+  }
+  const state = nextCreator();
+  hook.memoizedState = [state, currentDeps];
+
+  return state;
+}
