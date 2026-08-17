@@ -51,9 +51,9 @@ export const useMemo: Dispatcher['useMemo'] = (create, deps) => {
   return dispatcher.useMemo(create, deps);
 };
 
-export const useCallback: Dispatcher['useCallback'] = (create, deps) => {
+export const useCallback: Dispatcher['useCallback'] = (callback, deps) => {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useCallback(create, deps);
+  return dispatcher.useCallback(callback, deps);
 };
 
 export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED__ = {

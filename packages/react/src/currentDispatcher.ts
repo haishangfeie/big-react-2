@@ -5,7 +5,7 @@ export interface Dispatcher {
   useState: <S>(initialState: S | (() => S)) => [S, Dispatch<S>];
   useEffect: (
     create: () => void | (() => void),
-    deps: any[] | null | void
+    deps: HookDeps | undefined
   ) => void;
   useTransition: () => [boolean, (cb: () => void) => void];
   useRef: <S>(initialValue: S) => { current: S };
